@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Covid Guard</string>
+    <string name="welcome_to_covid_guard">Welcome to Covid Guard!</string>
+    <string name="register">REGISTER</string>
+    <string name="covid_guard">Covid Guard</string>
+    <string name="register_for_contact_tracing">Let\'s Get Started</string>
+    <string name="logo">LOGO</string>
+    <string name="info">With COVID Guard you can help keep the community safe from the spread of coronavirus</string>
+    <string name="contact_tracing">Contact Tracing</string>
+    <string name="terms_conditions"><![CDATA[By clicking the below button, you are accepting the ]]><a href="https://google.com">Terms and Conditions</a></string>
+    <string name="health_status_healthy">I am healthy and uninfected</string>
+    <string name="health_status_infected">I am infected with COVID-19</string>
+    <string name="health_status_disclaimer">Here you can anonymously update your health status. You will be notified if another user who has been near you has contracted COVID-19</string>
+    <string name="submit">SUBMIT</string>
+
+</resources>
