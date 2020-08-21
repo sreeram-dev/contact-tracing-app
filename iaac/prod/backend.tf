@@ -1,5 +1,5 @@
 terraform {
-    backend "ens-iaac" {
+    backend "gcs" {
         bucket = "tf-state-prod"
         prefix = "terraform/state"
     }
