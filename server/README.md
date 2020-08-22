@@ -15,6 +15,17 @@ To install virtualenvwrapper with your default shell - https://itnext.io/virtual
 1. Create a python3 virtual env  - `mkvirtualenv --python=/use/bin/python3 covid`
 2. `workon covid` to enter the virtualenv environment
 3. Install the Google Cloud sdk
+4. Add Project Absolute Path for ex: `$HOME/projects/projects/CovidGuard-F/server` to PYTHONPATH in `$HOME/.virtualenvs/covid/postactivate`
+    The command is `export PYTHON_PATH=$HOME/projects/CovidGuard-F/server:$PYTHONPATH`
+
+Sample PostActivate file looks like this - 
+```sh
+#!/usr/bin/zsh
+# This hook is sourced after this virtualenv is activated.
+
+cd $HOME/projects/CovidGuard-F/server
+export PYTHON_PATH=$HOME/projects/CovidGuard-F/server:$PYTHONPATH
+```
 
 ## Installation
 1. Run `pip install -r requirements.txt`
