@@ -1,14 +1,17 @@
-runtime: python38
+runtime: python37
 
 # instance to run the app engine on - F1 is free tier
 instance_class: F1
 
-entrypoint: entrypoint.sh
+entrypoint: uwsgi --http-socket :8080 --wsgi-file main.py --callable app --master --processes 1 --threads 2
 
 env_variables:
     LOGGER: "prod-logger"
-    GAE_ENV: "standard"
     PORT: "8080"
+    APP_MODE: "prod"
+    GAE_USE_SOCKETS_HTTPLIB : 'true'
+    GAE_ENV: "standard"
+    SECRET_KEY: "2d931eedecc4b2666808a6042efe2182"
 
 handlers:
   # This configures Google App Engine to serve the files in the app's static

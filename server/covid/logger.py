@@ -12,14 +12,6 @@ class LogConfig(object):
             'short': {'format': '%(message)s'}
         },
         'handlers': {
-            'debug-file': {
-                'level': 'INFO',
-                'formatter': 'standard',
-                'class': 'logging.handlers.RotatingFileHandler',
-                'filename': 'covid-server.log',
-                'maxBytes': 5000000,
-                'backupCount': 10
-            },
             'debug': {
                 'level': 'DEBUG',
                 'formatter': 'standard',
