@@ -48,7 +48,6 @@ public class ExposureKeyService extends Service {
     static volatile Cipher cipher;
 
 
-
     volatile static SecretKeySpec aesKey;
 
 
@@ -67,7 +66,6 @@ public class ExposureKeyService extends Service {
     private static class TEKGenerator implements Runnable {
 
 
-
         @SuppressLint("SecureRandom")
         @Override
         public void run() {
@@ -75,7 +73,8 @@ public class ExposureKeyService extends Service {
             byte[] info = "EN-RPIK".getBytes();
             TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -58};
 //            bytesTemp = secureRandom.generateSeed(16);
-            RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
+            RPIKey = HKDF.fromHmacSha256().expand( TEK, info, 16);
+
             Log.d("TEK", Arrays.toString(TEK));
             Log.d("RPIKey", Arrays.toString(RPIKey));
             aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
@@ -106,7 +105,6 @@ public class ExposureKeyService extends Service {
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey);
 
                 byte[] rollingProximityID = cipher.doFinal(paddedData);
-                System.out.println(Arrays.toString(rollingProximityID));
 
                 Log.d("RPI", Arrays.toString(rollingProximityID));
 //                Log.d("MilliSeconds", String.valueOf(((System.currentTimeMillis()/1000))/60*10));
@@ -141,8 +139,8 @@ public class ExposureKeyService extends Service {
         String input = intent.getStringExtra("inputExtra");
         tekGenerator = new TEKGenerator();
         rpiGenerator = new RPIGenerator();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 6, TimeUnit.MINUTES);
-        scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 2, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 6, TimeUnit.SECONDS);
+        scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 2, TimeUnit.SECONDS);
 
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
