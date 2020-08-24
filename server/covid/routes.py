@@ -1,5 +1,6 @@
 from covid.app import app
 
-@app.route("/")
-def hello_world():
-    return "Welcome to covid-guard F verification server"
+from covid.verification.views import IndexView
+
+
+app.add_url_rule('/', view_func=IndexView.as_view('index'))
