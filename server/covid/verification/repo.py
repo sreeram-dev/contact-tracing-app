@@ -4,7 +4,7 @@
 from covid.app import APP_MODE
 from covid.providers.db import FireStoreClient
 from covid.utils import get_collection_name
-from covid.contants import TOKEN_COLLECTION
+from covid.constants import TOKEN_COLLECTION
 
 
 class TokenRepository(object):
