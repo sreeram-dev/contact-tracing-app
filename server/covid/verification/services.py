@@ -27,8 +27,8 @@ class RegistrationService(object):
 
 
     def register_uuid(self, request):
-        uuid = request.form.get('uuid')
+        registration_uuid = request.form.get('uuid')
         token = uuid.uuid4().hex
-        self.token_repo.insert(uuid, token)
+        self.token_repo.insert(registration_uuid, token)
 
         return token

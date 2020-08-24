@@ -9,7 +9,6 @@ class AppConfig(object):
     STATIC_FOLDER = join(SOURCE_DIR, 'static')
     TEMPLATE_FOLDER = join(SOURCE_DIR, 'templates')
     LOGGER_NAME = 'prod-logger'
-    LOGGER_HANDLER_POLICY = 'always'
     SERVER_NAME = 'covidgaurd-285412.ts.r.appspot.com'
 
 
@@ -19,8 +18,3 @@ class DebugAppConfig(object):
     TEMPLATE_FOLDER = join(SOURCE_DIR, 'templates')
     WTF_CSRF_ENABLED = False
     LOGGER_NAME = 'debug-logger'
-    LOGGER_HANDLER_POLICY = 'always'
-
-
-class DebugFireStoreConfig(object):
-    DATABASE = ''

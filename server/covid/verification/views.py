@@ -22,11 +22,21 @@ class RegistrationView(MethodView):
     service = RegistrationService()
 
     def post(self):
-        self.service.validate_request(request)
-        token = self.service.register_mobile(request)
+        try:
+            self.service.validate_request(request)
+        except Exception as e:
+            data = {
+                'success': False,
+                'message': str(e),
+            }
+            return data
+
+        token = self.service.register_uuid(request)
 
         data = {
             'success': True,
             'message': 'The UUID has been successfully registered',
             'token': token,
         }
+
+        return data

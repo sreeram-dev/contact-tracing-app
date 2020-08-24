@@ -17,7 +17,8 @@ class TokenRepository(object):
         """
         collection = self.client.collection(
                 get_collection_name(TOKEN_COLLECTION))
-        document = collection.get({'uuid': uuid})
+        # using get as it is a single document
+        document = collection.where('uuid', '==', uuid).get()
         return document
 
 
@@ -26,7 +27,7 @@ class TokenRepository(object):
         """
         collection = self.client.collection(
                 get_collection_name(TOKEN_COLLECTION))
-        document = collection.get({'token': token})
+        document = collection.where('token', '==', token).get()
         return document
 
 
@@ -35,4 +36,3 @@ class TokenRepository(object):
                 get_collection_name(TOKEN_COLLECTION))
 
         collection.add({'token': token, 'uuid': uuid})
-        retun
