@@ -1,39 +1,88 @@
 # -*- coding:utf-8 -*-
 
 import logging, platform
+from collections import OrderedDict
+
+import google.cloud.logging
+from google.cloud.logging.handlers import CloudLoggingHandler
+
+
+client = google.cloud.logging.Client()
 
 
 class LogConfig(object):
+    """Universal logging config
+    """
+
     dictConfig = {
         'version': 1,
         'disable_existing_loggers': False,
         'formatters': {
-            'standard': {'format': '%(asctime)s %(hostname)s: - %(name)s - %(levelname)s - %(message)s - [in %(pathname)s:%(lineno)d]'},
+            "google_json": {
+                "()": "flask_google_cloud_logger.FlaskGoogleCloudFormatter",
+                "application_info": {
+                    "type": "python-application",
+                    "application_name": "CovidGuard Application"
+                },
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
+            },
+            'standard': {
+                'class': 'jsonformatter.JsonFormatter',
+                'format': OrderedDict([
+                    ("Name", "name"),
+                    ("Levelno", "levelno"),
+                    ("Levelname", "levelname"),
+                    ("Pathname", "pathname"),
+                    ("Filename", "filename"),
+                    ("Module", "module"),
+                    ("Lineno", "lineno"),
+                    ("FuncName", "funcName"),
+                    ("Created", "created"),
+                    ("Asctime", "asctime"),
+                    ("Msecs", "msecs"),
+                    ("RelativeCreated", "relativeCreated"),
+                    ("Thread", "thread"),
+                    ("ThreadName", "threadName"),
+                    ("Process", "process"),
+                    ("Message", "message")
+                ])
+            },
             'short': {'format': '%(message)s'}
         },
+
         'handlers': {
-            'debug': {
-                'level': 'DEBUG',
-                'formatter': 'standard',
-                'class': 'logging.StreamHandler'
-            },
 
             'console': {
                 'class': 'logging.StreamHandler',
-                'level': 'DEBUG'
+                'level': 'DEBUG',
+                'formatter': 'standard',
             },
+
+            'google_json': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'google_json',
+            }
         },
+
         'loggers': {
+            'root': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propogate': True,
+            },
+
             'prod-logger': {
-                'handlers': ['debug'],
+                'handlers': ['google_json', 'console'],
                 'level': 'INFO',
                 'propagate': True
             },
+
             'debug-logger': {
-                'handlers': ['debug'],
+                'handlers': ['console'],
                 'level': 'DEBUG',
                 'propagate': True
             },
+
             'werkzeug': {'propagate': True}
         },
     }

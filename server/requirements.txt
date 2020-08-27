@@ -1,8 +1,12 @@
 Flask==1.1.2
 uwsgi==2.0.19
+flask-script==2.0.6
+jsonformatter==0.3.0
+flask-google-cloud-logger==0.2.1
 
 
 google-api-python-client==1.10.0
 google-auth==1.20.1
 google-cloud-pubsub==1.7.0
 google-cloud-firestore==1.8.1
+google-cloud-logging==1.15.1
