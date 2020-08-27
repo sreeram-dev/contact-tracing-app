@@ -15,7 +15,7 @@ class IndexView(MethodView):
         return jsonify({
             'success': True,
             'message': 'Welcome to covidguard API'
-        })
+        }), 200
 
 
 class RegistrationView(MethodView):
@@ -29,7 +29,7 @@ class RegistrationView(MethodView):
                 'success': False,
                 'message': str(e),
             }
-            return data
+            return data, 400
 
         token = self.service.register_uuid(request)
 
@@ -39,4 +39,4 @@ class RegistrationView(MethodView):
             'token': token,
         }
 
-        return data
+        return data, 200
