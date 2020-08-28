@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
+import org.altbeacon.beacon.Identifier;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -106,18 +107,22 @@ public class ExposureKeyService extends Service {
                 rollingProximityID = cipher.doFinal(paddedData);
                 Log.d("ENIntervalNumber", String.valueOf(ENIntervalNumber));
                 Log.d("RPI", Arrays.toString(rollingProximityID));
-                String uuidString = "01020304-0506-0708-090a-0b0c0d0e0f10";
+                String uuidString = Identifier.fromBytes(rollingProximityID, 0, 16, false).toString();
+                Log.d("String Beacon", uuidString);
                 BeaconParser beaconParser = new BeaconParser()
                         .setBeaconLayout("s:0-1=fd6f,p:-:-59,i:2-17");
+
                 Beacon beacon = new Beacon.Builder()
-                        .setId1(uuidString) //currently hardcoded, no data transmission but beacon detection works
+                        .setId1(Identifier.fromBytes(rollingProximityID, 0, 16, false).toString())
                         .build();
                 BeaconTransmitter beaconTransmitter = new
                         BeaconTransmitter(getApplicationContext(), beaconParser);
                 beaconTransmitter.startAdvertising(beacon);
-            } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            } catch (BadPaddingException | IllegalBlockSizeException | NullPointerException | ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
                 Log.d("RPI", "Issue");
                 e.printStackTrace();
+            } catch (InvalidKeyException key) {
+                Log.d("AESKey", "Started generation");
             }
 
         }
@@ -145,7 +150,7 @@ public class ExposureKeyService extends Service {
         String input = intent.getStringExtra("inputExtra");
         tekGenerator = new TEKGenerator();
         rpiGenerator = new RPIGenerator();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 60, TimeUnit.SECONDS );
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 60, TimeUnit.SECONDS);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 10, TimeUnit.SECONDS);
          /*
         This beacon layout is for the Exposure Notification service Bluetooth Spec
