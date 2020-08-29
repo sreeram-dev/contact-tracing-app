@@ -46,7 +46,7 @@ public class ExposureKeyService extends Service {
     static SecureRandom secureRandom;
     volatile static long ENIntervalNumber;
     private static final int SECS_PER_MIN = 60;
-    private static final int MINUTES_PER_INTERVAL = 10;
+    private static final int MINUTES_PER_INTERVAL = 1;
     ScheduledExecutorService scheduleTaskExecutor = Executors.newScheduledThreadPool(5);
     TEKGenerator tekGenerator;
     RPIGenerator rpiGenerator;
@@ -107,8 +107,7 @@ public class ExposureKeyService extends Service {
                 rollingProximityID = cipher.doFinal(paddedData);
                 Log.d("ENIntervalNumber", String.valueOf(ENIntervalNumber));
                 Log.d("RPI", Arrays.toString(rollingProximityID));
-                String uuidString = Identifier.fromBytes(rollingProximityID, 0, 16, false).toString();
-                Log.d("String Beacon", uuidString);
+
                 BeaconParser beaconParser = new BeaconParser()
                         .setBeaconLayout("s:0-1=fd6f,p:-:-59,i:2-17");
 
@@ -150,8 +149,8 @@ public class ExposureKeyService extends Service {
         String input = intent.getStringExtra("inputExtra");
         tekGenerator = new TEKGenerator();
         rpiGenerator = new RPIGenerator();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 60, TimeUnit.SECONDS);
-        scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 10, TimeUnit.SECONDS);
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 30, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
          /*
         This beacon layout is for the Exposure Notification service Bluetooth Spec
         That layout string above is what tells the library how to understand this new beacon type.
