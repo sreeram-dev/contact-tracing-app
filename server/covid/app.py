@@ -68,7 +68,7 @@ def handle_exception(e):
 
 
 @app.errorhandler(Exception)
-def handle_bad_request(e):
+def handle_internal_server_error(e):
     return "Response Failed", 500
 
 

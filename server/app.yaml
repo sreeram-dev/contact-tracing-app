@@ -3,7 +3,7 @@ runtime: python37
 # instance to run the app engine on - F1 is free tier
 instance_class: F1
 
-#entrypoint: uwsgi --http-socket :8080 --wsgi-file main.py --callable app --master --processes 1 --threads 2
+entrypoint: uwsgi --http-socket :8080 --wsgi-file main.py --callable app --master --processes 1 --threads 2
 
 env_variables:
     LOGGER: "prod-logger"
