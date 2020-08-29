@@ -1,10 +1,13 @@
 package com.project.covidguard;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.LinkMovementMethod;
@@ -19,14 +22,21 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.project.covidguard.web.services.VerificationService;
+import com.project.covidguard.web.services.VerificationServiceImpl;
+
 import org.altbeacon.beacon.BeaconManager;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity {
-    private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
-    private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
+    private static final int PERMISSION_REQUEST= 1;
+
     private static final String TAG = MainActivity.class.getName();;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -36,114 +46,104 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         verifyBluetooth();
 
-
-
-
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                if (this.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setTitle("This app needs background location access");
-                        builder.setMessage("Please grant location access so this app can detect beacons in the background.");
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            checkAndRequestPermissions();
+        }
+    }
 
-                            @androidx.annotation.RequiresApi(api = Build.VERSION_CODES.Q)
-                            @Override
-                            public void onDismiss(DialogInterface dialog) {
-                                requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                                        PERMISSION_REQUEST_BACKGROUND_LOCATION);
-                            }
+    private void checkAndRequestPermissions() {
+        String[] permissions = {
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        };
 
-                        });
-                        builder.show();
-                    }
-                    else {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setTitle("Functionality limited");
-                        builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons in the background.  Please go to Settings -> Applications -> Permissions and grant background location access to this app.");
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+        ArrayList<String>  permissionsNeeded = new ArrayList<>();
 
-                            @Override
-                            public void onDismiss(DialogInterface dialog) {
-                            }
-
-                        });
-                        builder.show();
-                    }
-
-                }
-            } else {
-                if (this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                            PERMISSION_REQUEST_FINE_LOCATION);
-                }
-                else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons.  Please go to Settings -> Applications -> Permissions and grant location access to this app.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                        }
-
-                    });
-                    builder.show();
-                }
-
+        // Permissions needed
+        for (String permission: permissions) {
+            if (this.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(permission);
             }
         }
 
+        // Permissions for which you can ask the user
+        ArrayList<String> manualPermissionRequests = new ArrayList<>();
+        ArrayList<String> autoPermissionRequests = new ArrayList<>();
+
+        for (String permission: permissionsNeeded) {
+            if (!this.shouldShowRequestPermissionRationale(permission)) {
+                manualPermissionRequests.add(permission);
+            } else {
+                autoPermissionRequests.add(permission);
+            }
+        }
+
+        if (!autoPermissionRequests.isEmpty()) {
+            String[] askPermission = new String[autoPermissionRequests.size()];
+            for (int i=0; i<autoPermissionRequests.size(); i++) {
+                askPermission[i] = autoPermissionRequests.get(i);
+            }
+
+            requestPermissions(askPermission, PERMISSION_REQUEST);
+        }
+
+        if (!manualPermissionRequests.isEmpty()) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("This app needs additional permissions");
+            StringBuilder sb = new StringBuilder("Please grant access to the following permissions. \n");
+            for (int i=0; i<manualPermissionRequests.size(); i++) {
+                sb.append((i+1) + ": " + manualPermissionRequests.get(i) + "\n");
+            }
+
+            builder.setMessage(sb.toString());
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @androidx.annotation.RequiresApi(api = Build.VERSION_CODES.Q)
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                }
+            });
+
+            builder.show();
+        }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_FINE_LOCATION: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "fine location permission granted");
-                } else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
 
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                        }
-
-                    });
-                    builder.show();
-                }
-                return;
+        ArrayList<String> compulsoryPermissions = new ArrayList<String>() {
+            {
+                add(Manifest.permission.ACCESS_FINE_LOCATION);
+                add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
             }
-            case PERMISSION_REQUEST_BACKGROUND_LOCATION: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "background location permission granted");
-                } else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons when in the background.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+        };
 
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                        }
+        ArrayList<String> compulsoryNotGranted = new ArrayList<>();
 
-                    });
-                    builder.show();
-                }
+        for (int i=0; i<permissions.length; i++) {
+            if (compulsoryPermissions.contains(permissions[i]) && grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                compulsoryNotGranted.add(permissions[i]);
+            } else {
+                Log.d(TAG, permissions[i] + " has been granted");
             }
+        }
+
+        if (!compulsoryNotGranted.isEmpty()) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Functionality limited");
+            builder.setMessage("Location permissions have not been granted.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                }
+
+            });
         }
     }
 
@@ -188,13 +188,42 @@ public class MainActivity extends AppCompatActivity {
     public void clickRegistrationHandler(View view) {
 
         final String uuid = UUID.randomUUID().toString().replace("-", "");
+/*
+        new RegisterUUIDTask().execute();
+
+        try {
+
+            String token = service.registerUUIDAndGetToken(uuid);
+            SharedPreferences sharedPref = getApplicationContext()
+                    .getSharedPreferences(
+                            getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString(token, uuid);
+            editor.commit();
+
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            Toast.makeText(this, "App Registration Failed", Toast.LENGTH_LONG).show();
+        }
+*/
         Toast.makeText(this, uuid, Toast.LENGTH_LONG).show();
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
         ContextCompat.startForegroundService(this, serviceIntent);
         setContentView(R.layout.diagnose_fragment);
+    }
 
-
+    public boolean isNetworkAvailable() {
+        ConnectivityManager cm = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        // if no network is available networkInfo will be null
+        // otherwise check if we are connected
+        if (networkInfo != null && networkInfo.isConnected()) {
+            return true;
+        }
+        return false;
     }
 
     public void termsConditionsLink(View view) {
