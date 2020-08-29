@@ -5,6 +5,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 
+import org.conscrypt.Conscrypt;
+
+import java.security.Security;
+
 
 public class App extends Application {
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
@@ -13,6 +17,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
+        Security.insertProviderAt(Conscrypt.newProvider(), 1);
         createNotificationChannel();
     }
 
