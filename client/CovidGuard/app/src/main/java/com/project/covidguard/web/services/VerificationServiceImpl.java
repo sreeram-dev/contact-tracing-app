@@ -38,9 +38,13 @@ public class VerificationServiceImpl implements VerificationService {
 
     public String registerUUIDAndGetToken(String uuid) throws IOException {
 
+        RequestBody formBody = new FormBody.Builder()
+                .add("uuid", uuid)
+                .build();
+
         Request request  = new Request.Builder()
                 .url(VerificationServer.SERVER_URL_PROD)
-                .post(getRegistrationRequestBody(uuid))
+                .post(formBody)
                 .build();
 
         Response response = client.newCall(request).execute();
@@ -54,17 +58,6 @@ public class VerificationServiceImpl implements VerificationService {
 
         return resp.getToken();
     }
-
-    private RequestBody getRegistrationRequestBody(String uuid) {
-
-
-        RequestBody formBody = new FormBody.Builder()
-                .add("uuid", uuid)
-                .build();
-
-        return formBody;
-    }
-
 
 
 }

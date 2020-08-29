@@ -3,6 +3,7 @@ package com.project.covidguard;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,13 +29,14 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
     private static final String TAG = MainActivity.class.getName();;
 
-
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         verifyBluetooth();
+
+
 
 
 

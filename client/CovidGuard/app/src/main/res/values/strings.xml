@@ -12,5 +12,8 @@
     <string name="health_status_infected">I am infected with COVID-19</string>
     <string name="health_status_disclaimer">Here you can anonymously update your health status. You will be notified if another user who has been near you has contracted COVID-19</string>
     <string name="submit">SUBMIT</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="splash_text">Checking for permissions and registration</string>
 
 </resources>
