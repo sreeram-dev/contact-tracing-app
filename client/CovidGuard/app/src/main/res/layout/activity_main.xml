@@ -18,7 +18,7 @@
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imageView9"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="300dp"
             android:layout_alignParentTop="true"
             android:contentDescription="@string/logo"
             android:src="@drawable/app_logo" />
