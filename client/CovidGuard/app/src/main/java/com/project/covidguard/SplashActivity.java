@@ -34,10 +34,10 @@ import java.util.Map;
 import java.util.UUID;
 
 
-public class MainActivity extends AppCompatActivity {
+public class SplashActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST= 1;
 
-    private static final String TAG = MainActivity.class.getName();;
+    private static final String TAG = SplashActivity.class.getName();;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -230,7 +230,4 @@ public class MainActivity extends AppCompatActivity {
         TextView termsConditions = findViewById(R.id.textView7);
         termsConditions.setMovementMethod(LinkMovementMethod.getInstance());
     }
-
-
-
 }
