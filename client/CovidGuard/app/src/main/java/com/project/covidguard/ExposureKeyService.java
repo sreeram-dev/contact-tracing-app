@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -117,6 +118,7 @@ public class ExposureKeyService extends Service {
                 BeaconTransmitter beaconTransmitter = new
                         BeaconTransmitter(getApplicationContext(), beaconParser);
                 beaconTransmitter.startAdvertising(beacon);
+
             } catch (BadPaddingException | IllegalBlockSizeException | NullPointerException | ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
                 Log.d("RPI", "Issue");
                 e.printStackTrace();
@@ -149,6 +151,10 @@ public class ExposureKeyService extends Service {
         String input = intent.getStringExtra("inputExtra");
         tekGenerator = new TEKGenerator();
         rpiGenerator = new RPIGenerator();
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "ExposureService::ExposureNotificationService");
+        wakeLock.acquire();
         scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 30, TimeUnit.MINUTES);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
          /*
