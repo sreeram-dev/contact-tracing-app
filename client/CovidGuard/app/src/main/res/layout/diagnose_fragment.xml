@@ -4,30 +4,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<RelativeLayout
+<com.google.android.material.circularreveal.CircularRevealRelativeLayout
     android:layout_width="match_parent"
     android:orientation="vertical"
     android:layout_height="match_parent">
-    <ImageView
+
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_alignParentTop="true"
         android:layout_height="wrap_content"
         android:layout_above="@+id/container"
         app:srcCompat="@drawable/diagnosis_bg" />
-    <LinearLayout
+
+    <com.google.android.material.circularreveal.CircularRevealLinearLayout
         android:layout_width="match_parent"
         android:layout_above="@+id/textView"
         android:id="@+id/container"
         android:layout_centerInParent="true"
         android:orientation="vertical"
         android:layout_height="wrap_content">
+
         <View
             android:id="@+id/divider2"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="?android:attr/listDivider"
-            />
+            android:background="?android:attr/listDivider"/>
 
         <RadioGroup
             android:id="@+id/radioGroup"
@@ -38,30 +40,28 @@
             android:layout_marginBottom="15dp"
             android:layout_gravity="center"
             android:gravity="center"
-            android:layout_below="@+id/divider2"
-            >
+            android:layout_below="@+id/divider2">
 
-            <RadioButton
+            <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/radioButton2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:text="@string/health_status_infected"
-                android:textSize="16sp"
-                />
-
+                android:textSize="16sp" />
         </RadioGroup>
+
         <View
             android:id="@+id/divider3"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_below="@+id/radioGroup"
-            android:background="?android:attr/listDivider"
-            />
-    </LinearLayout>
+            android:background="?android:attr/listDivider"/>
 
-    <TextView
+    </com.google.android.material.circularreveal.CircularRevealLinearLayout>
+
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:padding="5dp"
@@ -72,9 +72,9 @@
         android:layout_above="@+id/button2"
         android:layout_marginBottom="20dp"
         android:text="@string/health_status_disclaimer"
-        android:textAlignment="center"
-       />
-    <Button
+        android:textAlignment="center" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -86,19 +86,9 @@
         android:text="@string/submit"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
-       />
-
-</RelativeLayout>
+        />
 
 
-
-
-
-
-
-
-
-
-
+</com.google.android.material.circularreveal.CircularRevealRelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

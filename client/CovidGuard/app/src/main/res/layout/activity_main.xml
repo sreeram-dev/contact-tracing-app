@@ -5,18 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    tools:context=".MainActivity">
+    tools:context=".SplashActivity">
 
 
-    <RelativeLayout
+    <com.google.android.material.circularreveal.CircularRevealRelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
         tools:layout_editor_absoluteY="1dp">
 
-
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imageView9"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -24,7 +23,7 @@
             android:contentDescription="@string/logo"
             android:src="@drawable/app_logo" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/textView7"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -37,7 +36,7 @@
             android:textColor="#000000"
             android:textSize="16sp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -50,5 +49,5 @@
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 
-    </RelativeLayout>
+    </com.google.android.material.circularreveal.CircularRevealRelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
