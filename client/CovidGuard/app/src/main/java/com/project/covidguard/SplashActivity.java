@@ -51,11 +51,12 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     private void checkAndRequestPermissions() {
         String[] permissions = {
                 Manifest.permission.INTERNET,
                 Manifest.permission.ACCESS_NETWORK_STATE,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+//                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION
         };
 
@@ -111,6 +112,7 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions, @NonNull int[] grantResults) {

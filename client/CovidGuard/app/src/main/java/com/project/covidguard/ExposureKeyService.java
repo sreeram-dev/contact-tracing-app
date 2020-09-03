@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -15,15 +16,19 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconConsumer;
+import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
 import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.Region;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,10 +41,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 import at.favre.lib.crypto.HKDF;
 
+import static android.content.ContentValues.TAG;
 import static com.project.covidguard.App.CHANNEL_ID;
 
 
-public class ExposureKeyService extends Service {
+public class ExposureKeyService extends Service implements BeaconConsumer {
 
     volatile static byte[] TEK;
     volatile static byte[] RPIKey;
@@ -51,6 +57,7 @@ public class ExposureKeyService extends Service {
     ScheduledExecutorService scheduleTaskExecutor = Executors.newScheduledThreadPool(5);
     TEKGenerator tekGenerator;
     RPIGenerator rpiGenerator;
+    BeaconManager beaconManager;
 
     static volatile Cipher cipher;
 
@@ -66,8 +73,44 @@ public class ExposureKeyService extends Service {
         }
     }
 
+
     public static long getENIntervalNumber(long secsSinceEpoch) {
         return secsSinceEpoch / (SECS_PER_MIN * MINUTES_PER_INTERVAL);
+    }
+
+    public static <Beacon> Beacon getLastElement(final Iterable<Beacon> elements) {
+        Beacon lastElement = null;
+
+        for (Beacon element : elements) {
+            lastElement = element;
+        }
+
+        return lastElement;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public void onBeaconServiceConnect() {
+
+        beaconManager.addRangeNotifier((Collection<Beacon> beacons, Region region) -> {
+            if (beacons.size() != 0) {
+
+                Beacon beacon = getLastElement(beacons);
+                Log.d(TAG, "didRangeBeaconsInRegion: UUID: " + beacon.getId1()
+                        + "\nRSSI: " + beacon.getRssi()
+                        + "\nTX: " + beacon.getTxPower()
+                        + "\nDISTANCE: " + beacon.getDistance());
+            }
+
+        });
+
+        try {
+            Region region = new Region("com.project.covidguard.ENRegion", null, null, null);
+
+            beaconManager.startRangingBeaconsInRegion(region);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     private static class TEKGenerator implements Runnable {
@@ -78,7 +121,7 @@ public class ExposureKeyService extends Service {
         public void run() {
 
             byte[] info = "EN-RPIK".getBytes();
-            TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -58};
+            TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
 //            TEK = secureRandom.generateSeed(16);
             RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
             Log.d("TEK", Arrays.toString(TEK));
@@ -108,7 +151,7 @@ public class ExposureKeyService extends Service {
                 rollingProximityID = cipher.doFinal(paddedData);
                 Log.d("ENIntervalNumber", String.valueOf(ENIntervalNumber));
                 Log.d("RPI", Arrays.toString(rollingProximityID));
-
+                Log.d("RPIString", Identifier.fromBytes(rollingProximityID, 0, 16, false).toString());
                 BeaconParser beaconParser = new BeaconParser()
                         .setBeaconLayout("s:0-1=fd6f,p:-:-59,i:2-17");
 
@@ -142,13 +185,17 @@ public class ExposureKeyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        beaconManager = BeaconManager.getInstanceForApplication(this);
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("s:0-1=fd6f,p:-:-59,i:2-17"));
+        beaconManager.bind(this);
     }
 
-    @SuppressLint("GetInstance")
+    @SuppressLint({"GetInstance", "WakelockTimeout"})
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        String input = intent.getStringExtra("inputExtra");
+        String input = "Do not force stop this";
+
         tekGenerator = new TEKGenerator();
         rpiGenerator = new RPIGenerator();
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -157,6 +204,8 @@ public class ExposureKeyService extends Service {
         wakeLock.acquire();
         scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 30, TimeUnit.MINUTES);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
+
+
          /*
         This beacon layout is for the Exposure Notification service Bluetooth Spec
         That layout string above is what tells the library how to understand this new beacon type.

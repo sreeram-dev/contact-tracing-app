@@ -8,7 +8,7 @@ android {
     defaultConfig {
         applicationId "com.project.covidguard"
         minSdkVersion 23
-        targetSdkVersion 30
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
@@ -41,7 +41,8 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment:$nav_version"
     implementation "androidx.navigation:navigation-ui:$nav_version"
 
-
+    //noinspection GradleCompatible
+    implementation 'com.android.support:localbroadcastmanager:28.0.0'
     // 3rd party
     implementation group: 'at.favre.lib', name: 'hkdf', version: '1.1.0'
     implementation 'org.altbeacon:android-beacon-library:2.17.1'
