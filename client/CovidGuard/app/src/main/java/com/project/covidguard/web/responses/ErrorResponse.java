@@ -10,4 +10,12 @@ public class ErrorResponse {
         this.name = name;
         this.description = description;
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("code: " + code + "\n");
+        sb.append("name: " + name + "\n");
+        sb.append("description: " + description + "\n");
+        return sb.toString();
+    }
 }
