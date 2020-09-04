@@ -197,10 +197,10 @@ public class SplashActivity extends AppCompatActivity {
             Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
 
-        if (isNetworkAvailable() && isTokenAbsent()) {
+        if (isNetworkAvailable() && !isTokenPresent()) {
             generateAndStoreToken(uuid);
         }
-        
+
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
         ContextCompat.startForegroundService(this, serviceIntent);
@@ -246,16 +246,17 @@ public class SplashActivity extends AppCompatActivity {
         termsConditions.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    public boolean isTokenAbsent() {
+    public boolean isTokenPresent() {
         SharedPreferences sharedPref = getApplicationContext()
                 .getSharedPreferences(
                         getString(R.string.preference_file_key), Context.MODE_PRIVATE);
 
-        // if one of the keys, token and uuid are absent,
+        // if one of the keys, token and uuid, are absent, generate a new pair
         if (!sharedPref.contains("token") || !sharedPref.contains("uuid")) {
             return false;
         }
 
+        Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
         return true;
     }
 }
