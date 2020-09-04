@@ -192,13 +192,15 @@ public class SplashActivity extends AppCompatActivity {
 
     public void clickRegistrationHandler(View view) {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
-        if (isNetworkAvailable()) {
-            generateAndStoreToken(uuid);
-        } else {
+
+        if (!isNetworkAvailable()) {
             Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
 
-        Toast.makeText(this, uuid, Toast.LENGTH_LONG).show();
+        if (isNetworkAvailable() && isTokenAbsent()) {
+            generateAndStoreToken(uuid);
+        }
+        
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
         ContextCompat.startForegroundService(this, serviceIntent);
@@ -215,7 +217,9 @@ public class SplashActivity extends AppCompatActivity {
                             getString(R.string.preference_file_key), Context.MODE_PRIVATE);
 
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putString(token, uuid);
+            // token and uuid are related.
+            editor.putString("token", token);
+            editor.putString("uuid", uuid);
             editor.commit();
         } catch (IOException exception) {
             exception.printStackTrace();
@@ -240,5 +244,18 @@ public class SplashActivity extends AppCompatActivity {
     public void termsConditionsLink(View view) {
         TextView termsConditions = findViewById(R.id.textView7);
         termsConditions.setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    public boolean isTokenAbsent() {
+        SharedPreferences sharedPref = getApplicationContext()
+                .getSharedPreferences(
+                        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+        // if one of the keys, token and uuid are absent,
+        if (!sharedPref.contains("token") || !sharedPref.contains("uuid")) {
+            return false;
+        }
+
+        return true;
     }
 }
