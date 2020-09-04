@@ -18,6 +18,15 @@ class IndexView(MethodView):
         }), 200
 
 
+class WarmupView(MethodView):
+
+    def get(self):
+        return jsonify({
+            'success': True,
+            'message': 'Warmup Request'
+        }), 200
+
+
 class RegistrationView(MethodView):
     service = RegistrationService()
 
@@ -26,10 +35,11 @@ class RegistrationView(MethodView):
             self.service.validate_request(request)
         except Exception as e:
             data = {
-                'success': False,
-                'message': str(e),
+                'code': 400,
+                'name': e.__class__.__name__,
+                'description': str(e)
             }
-            return data, 400
+            return jsonify(data), 400
 
         token = self.service.register_uuid(request)
 
@@ -39,4 +49,4 @@ class RegistrationView(MethodView):
             'token': token,
         }
 
-        return data, 200
+        return jsonify(data), 200
