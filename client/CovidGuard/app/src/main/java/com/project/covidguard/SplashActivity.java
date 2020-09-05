@@ -193,13 +193,16 @@ public class SplashActivity extends AppCompatActivity {
     public void clickRegistrationHandler(View view) {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
 
-        if (!isNetworkAvailable()) {
+
+        if (!isNetworkAvailable() && !isTokenPresent()) {
             Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
 
         if (isNetworkAvailable() && !isTokenPresent()) {
             generateAndStoreToken(uuid);
         }
+
+
 
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");

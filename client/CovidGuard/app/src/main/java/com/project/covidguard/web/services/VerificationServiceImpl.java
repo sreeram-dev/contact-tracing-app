@@ -57,6 +57,7 @@ public class VerificationServiceImpl implements VerificationService {
         AsyncHttpTask task = new AsyncHttpTask(request);
 
         Future<Response> observer = service.submit(task);
+        service.shutdown();
         try {
             Response response = observer.get();
             if (response == null || !response.isSuccessful()) {
