@@ -1,6 +1,10 @@
 package com.project.covidguard.web.services;
 
 
+import android.app.Application;
+import android.content.Context;
+
+import com.project.covidguard.AppExecutors;
 import com.project.covidguard.web.AsyncHttpTask;
 import com.project.covidguard.web.constants.VerificationServer;
 import com.project.covidguard.web.responses.ErrorResponse;
@@ -11,7 +15,6 @@ import com.squareup.moshi.Moshi;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import okhttp3.MediaType;
@@ -23,6 +26,8 @@ import okhttp3.Response;
 public class VerificationServiceImpl implements VerificationService {
 
 
+    private Context context;
+
     private final Moshi moshi;
     private final JsonAdapter<RegisterUUIDResponse> responseJsonAdapter;
     private final JsonAdapter<ErrorResponse> errorResponseJsonAdapter;
@@ -32,16 +37,14 @@ public class VerificationServiceImpl implements VerificationService {
     private static final MediaType JSONMediaType = MediaType.parse("application/json; charset=utf-8");
 
 
-    public VerificationServiceImpl() {
-
+    public VerificationServiceImpl(Context context) {
+        this.context = context;
         this.moshi = new Moshi.Builder().build();
         this.responseJsonAdapter = moshi.adapter(RegisterUUIDResponse.class);
         this.errorResponseJsonAdapter = moshi.adapter(ErrorResponse.class);
     }
 
     public String registerUUIDAndGetToken(String uuid) throws IOException {
-
-        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
 
         RequestBody formBody = new FormBody.Builder()
                 .add("uuid", uuid)
@@ -53,11 +56,11 @@ public class VerificationServiceImpl implements VerificationService {
                 .addHeader("Content-Type", "application/x-www-form-urlencoded")
                 .build();
 
-        ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService service = AppExecutors.getInstance().networkIO();
         AsyncHttpTask task = new AsyncHttpTask(request);
 
         Future<Response> observer = service.submit(task);
-        service.shutdown();
+
         try {
             Response response = observer.get();
             if (response == null || !response.isSuccessful()) {

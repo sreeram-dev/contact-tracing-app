@@ -1,4 +1,4 @@
-package com.project.covidguard;
+package com.project.covidguard.activities;
 
 import android.Manifest;
 import android.content.Context;
@@ -22,6 +22,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.project.covidguard.ExposureKeyService;
+import com.project.covidguard.R;
 import com.project.covidguard.web.services.VerificationService;
 import com.project.covidguard.web.services.VerificationServiceImpl;
 
@@ -29,12 +31,7 @@ import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class SplashActivity extends AppCompatActivity {
@@ -193,7 +190,6 @@ public class SplashActivity extends AppCompatActivity {
     public void clickRegistrationHandler(View view) {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
 
-
         if (!isNetworkAvailable() && !isTokenPresent()) {
             Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
@@ -201,8 +197,6 @@ public class SplashActivity extends AppCompatActivity {
         if (isNetworkAvailable() && !isTokenPresent()) {
             generateAndStoreToken(uuid);
         }
-
-
 
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
@@ -212,7 +206,7 @@ public class SplashActivity extends AppCompatActivity {
 
     private void generateAndStoreToken(String uuid) {
         try {
-            VerificationService verificationService = new VerificationServiceImpl();
+            VerificationService verificationService = new VerificationServiceImpl(getApplicationContext());
 
             String token = verificationService.registerUUIDAndGetToken(uuid);
             SharedPreferences sharedPref = getApplicationContext()
