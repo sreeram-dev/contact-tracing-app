@@ -32,7 +32,11 @@ public class App extends Application {
         Log.d(LOG_TAG, "Initialising SQLITE Database");
         mDB = AppDatabase.getInstance(getApplicationContext());
 
-        Security.insertProviderAt(Conscrypt.newProvider(), 1);
+        // Add conscrypt if the android version is less than SDK Level 29
+        // TLS 1.3 is by default in Android Version Q
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            Security.insertProviderAt(Conscrypt.newProvider(), 1);
+        }
         createNotificationChannel();
     }
 
