@@ -17,9 +17,15 @@ public class TEK {
     @ColumnInfo(name = "en_interval_number")
     private String enIntervalNumber;
 
-    public TEK(String tekId, String enIntervalNumber) {
+    /**
+     * Created at
+     */
+    @ColumnInfo(name = "created_at")
+    private Integer createdAt;
+
+    public TEK(String tekId, String enIntervalNumber, Integer createdAt) {
         this.tekId = tekId;
         this.enIntervalNumber = enIntervalNumber;
+        this.createdAt = createdAt;
     }
-
 }
