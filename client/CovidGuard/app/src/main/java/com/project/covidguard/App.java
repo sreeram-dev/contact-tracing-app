@@ -4,6 +4,9 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.util.Log;
+
+import com.project.covidguard.data.AppDatabase;
 
 import org.conscrypt.Conscrypt;
 
@@ -12,10 +15,22 @@ import java.security.Security;
 
 public class App extends Application {
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
+    private static final String LOG_TAG = "CovidGuardApplication";
+
+    // Executor Pool to execute network, thread and IO
+    private AppExecutors mExecutors;
+
+    // Perform App DB
+    private AppDatabase mDB;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Log.d(LOG_TAG, "Initialising App Executors");
+        mExecutors = AppExecutors.getInstance();
+        Log.d(LOG_TAG, "Initialising SQLITE Database");
+        mDB = AppDatabase.getInstance(getApplicationContext());
 
         Security.insertProviderAt(Conscrypt.newProvider(), 1);
         createNotificationChannel();
@@ -32,5 +47,30 @@ public class App extends Application {
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
         }
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+
+        // terminate the executors
+        if (mExecutors != null) {
+            Log.d(LOG_TAG, "Shutting down async executors");
+            mExecutors.shutdownServices();
+        }
+
+        // close the database on app termination
+        if (mDB != null && mDB.isOpen()) {
+            Log.d(LOG_TAG, "Shutting down database");
+            mDB.close();
+        }
+    }
+
+    public AppExecutors getExecutors() {
+        return mExecutors;
+    }
+
+    public AppDatabase getDB() {
+        return mDB;
     }
 }

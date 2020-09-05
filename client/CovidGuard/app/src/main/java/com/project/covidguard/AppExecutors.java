@@ -2,10 +2,12 @@ package com.project.covidguard;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -19,13 +21,14 @@ import java.util.concurrent.Executors;
 public class AppExecutors {
 
     // For Singleton instantiation
+    private static final String LOG_TAG = AppExecutors.class.getSimpleName();
     private static final Object LOCK = new Object();
     private static AppExecutors sInstance;
-    private final Executor diskIO;
+    private final ExecutorService diskIO;
     private final Executor mainThread;
-    private final Executor networkIO;
+    private final ExecutorService networkIO;
 
-    private AppExecutors(Executor diskIO, Executor networkIO, Executor mainThread) {
+    private AppExecutors(ExecutorService diskIO, ExecutorService networkIO, Executor mainThread) {
         this.diskIO = diskIO;
         this.networkIO = networkIO;
         this.mainThread = mainThread;
@@ -34,6 +37,7 @@ public class AppExecutors {
     public static AppExecutors getInstance() {
         if (sInstance == null) {
             synchronized (LOCK) {
+                Log.d(LOG_TAG, "Creating the disk, network and main threads");
                 sInstance = new AppExecutors(Executors.newSingleThreadExecutor(),
                         Executors.newFixedThreadPool(3),
                         new MainThreadExecutor());
@@ -42,7 +46,7 @@ public class AppExecutors {
         return sInstance;
     }
 
-    public Executor diskIO() {
+    public ExecutorService diskIO() {
         return diskIO;
     }
 
@@ -50,16 +54,27 @@ public class AppExecutors {
         return mainThread;
     }
 
-    public Executor networkIO() {
+    public ExecutorService networkIO() {
         return networkIO;
     }
 
+    public void shutdownServices() {
+        Log.d(LOG_TAG, "Shutting down executors - network, disk");
+        diskIO.shutdown();
+        networkIO.shutdown();
+    }
+
+    /**
+     * TODO: Make it into a callable interface
+     * or Submit callback in the runnable class
+     */
     private static class MainThreadExecutor implements Executor {
         private Handler mainThreadHandler = new Handler(Looper.getMainLooper());
 
         @Override
         public void execute(@NonNull Runnable command) {
             mainThreadHandler.post(command);
+
         }
     }
 }

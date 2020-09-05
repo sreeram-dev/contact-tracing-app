@@ -1,4 +1,4 @@
-package com.project.covidguard;
+package com.project.covidguard.activities;
 
 import android.Manifest;
 import android.content.Context;
@@ -22,6 +22,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.project.covidguard.ExposureKeyService;
+import com.project.covidguard.R;
 import com.project.covidguard.web.services.VerificationService;
 import com.project.covidguard.web.services.VerificationServiceImpl;
 
@@ -29,12 +31,7 @@ import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class SplashActivity extends AppCompatActivity {
