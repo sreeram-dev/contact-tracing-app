@@ -32,12 +32,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class SplashActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST= 1;
 
-    private static final String TAG = SplashActivity.class.getName();;
+    private static final String TAG = SplashActivity.class.getName();
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -188,48 +191,75 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     public void clickRegistrationHandler(View view) {
-
         final String uuid = UUID.randomUUID().toString().replace("-", "");
-/*
-        new RegisterUUIDTask().execute();
 
-        try {
 
-            String token = service.registerUUIDAndGetToken(uuid);
-            SharedPreferences sharedPref = getApplicationContext()
-                    .getSharedPreferences(
-                            getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-
-            SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putString(token, uuid);
-            editor.commit();
-
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            Toast.makeText(this, "App Registration Failed", Toast.LENGTH_LONG).show();
+        if (!isNetworkAvailable() && !isTokenPresent()) {
+            Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
-*/
-        Toast.makeText(this, uuid, Toast.LENGTH_LONG).show();
+
+        if (isNetworkAvailable() && !isTokenPresent()) {
+            generateAndStoreToken(uuid);
+        }
+
+
+
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
         ContextCompat.startForegroundService(this, serviceIntent);
         setContentView(R.layout.diagnose_fragment);
     }
 
+    private void generateAndStoreToken(String uuid) {
+        try {
+            VerificationService verificationService = new VerificationServiceImpl();
+
+            String token = verificationService.registerUUIDAndGetToken(uuid);
+            SharedPreferences sharedPref = getApplicationContext()
+                    .getSharedPreferences(
+                            getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+            SharedPreferences.Editor editor = sharedPref.edit();
+            // token and uuid are related.
+            editor.putString("token", token);
+            editor.putString("uuid", uuid);
+            editor.commit();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            Toast.makeText(this, "App Registration Failed", Toast.LENGTH_LONG).show();
+        }
+    }
+
     public boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        // if no network is available networkInfo will be null
-        // otherwise check if we are connected
-        if (networkInfo != null && networkInfo.isConnected()) {
-            return true;
+
+        if (networkInfo == null || !networkInfo.isConnected() ||
+                (networkInfo.getType() != ConnectivityManager.TYPE_WIFI
+                        && networkInfo.getType() != ConnectivityManager.TYPE_MOBILE)) {
+            return false;
         }
-        return false;
+
+        return true;
     }
 
     public void termsConditionsLink(View view) {
         TextView termsConditions = findViewById(R.id.textView7);
         termsConditions.setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    public boolean isTokenPresent() {
+        SharedPreferences sharedPref = getApplicationContext()
+                .getSharedPreferences(
+                        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+        // if one of the keys, token and uuid, are absent, generate a new pair
+        if (!sharedPref.contains("token") || !sharedPref.contains("uuid")) {
+            return false;
+        }
+
+        Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
+        return true;
     }
 }

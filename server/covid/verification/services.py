@@ -19,8 +19,8 @@ class RegistrationService(object):
 
         uuid = request.form.get('uuid')
 
-        if len(uuid) != 16:
-            raise ValueError('UUID length not equal to 16')
+        if len(uuid) < 16 or len(uuid) > 32:
+            raise ValueError('UUID length not between 16 and 32')
 
         if self.token_repo.find_by_uuid(uuid):
             raise ValueError('UUID already exists')
