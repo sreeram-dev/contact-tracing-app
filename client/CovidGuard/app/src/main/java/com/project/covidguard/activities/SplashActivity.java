@@ -190,7 +190,6 @@ public class SplashActivity extends AppCompatActivity {
     public void clickRegistrationHandler(View view) {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
 
-
         if (!isNetworkAvailable() && !isTokenPresent()) {
             Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
@@ -198,8 +197,6 @@ public class SplashActivity extends AppCompatActivity {
         if (isNetworkAvailable() && !isTokenPresent()) {
             generateAndStoreToken(uuid);
         }
-
-
 
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
@@ -209,7 +206,7 @@ public class SplashActivity extends AppCompatActivity {
 
     private void generateAndStoreToken(String uuid) {
         try {
-            VerificationService verificationService = new VerificationServiceImpl();
+            VerificationService verificationService = new VerificationServiceImpl(getApplicationContext());
 
             String token = verificationService.registerUUIDAndGetToken(uuid);
             SharedPreferences sharedPref = getApplicationContext()

@@ -1,6 +1,9 @@
 package com.project.covidguard.web.services;
 
 
+import android.app.Application;
+import android.content.Context;
+
 import com.project.covidguard.AppExecutors;
 import com.project.covidguard.web.AsyncHttpTask;
 import com.project.covidguard.web.constants.VerificationServer;
@@ -23,6 +26,8 @@ import okhttp3.Response;
 public class VerificationServiceImpl implements VerificationService {
 
 
+    private Context context;
+
     private final Moshi moshi;
     private final JsonAdapter<RegisterUUIDResponse> responseJsonAdapter;
     private final JsonAdapter<ErrorResponse> errorResponseJsonAdapter;
@@ -32,8 +37,8 @@ public class VerificationServiceImpl implements VerificationService {
     private static final MediaType JSONMediaType = MediaType.parse("application/json; charset=utf-8");
 
 
-    public VerificationServiceImpl() {
-
+    public VerificationServiceImpl(Context context) {
+        this.context = context;
         this.moshi = new Moshi.Builder().build();
         this.responseJsonAdapter = moshi.adapter(RegisterUUIDResponse.class);
         this.errorResponseJsonAdapter = moshi.adapter(ErrorResponse.class);
