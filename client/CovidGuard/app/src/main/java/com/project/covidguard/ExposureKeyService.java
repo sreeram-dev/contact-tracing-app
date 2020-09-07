@@ -5,6 +5,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -38,11 +39,14 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.transform.Source;
 
 import at.favre.lib.crypto.HKDF;
 
 import static android.content.ContentValues.TAG;
 import static com.project.covidguard.App.CHANNEL_ID;
+import static com.project.covidguard.App.mydb;
+
 
 
 public class ExposureKeyService extends Service implements BeaconConsumer {
@@ -57,6 +61,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     ScheduledExecutorService scheduleTaskExecutor = Executors.newScheduledThreadPool(5);
     TEKGenerator tekGenerator;
     RPIGenerator rpiGenerator;
+    DatabaseHelper databaseHelper;
     BeaconManager beaconManager;
 
     static volatile Cipher cipher;
@@ -115,14 +120,18 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
     private static class TEKGenerator implements Runnable {
 
-
+//    DatabaseHelper mydb;
         @SuppressLint("SecureRandom")
+
         @Override
         public void run() {
 
             byte[] info = "EN-RPIK".getBytes();
-            TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
-//            TEK = secureRandom.generateSeed(16);
+//            TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
+            TEK = secureRandom.generateSeed(16);
+//            mydb=new DatabaseHelper(this);
+            Boolean inserted=mydb.insertData(Arrays.toString(TEK));
+            System.out.println("Inserted Value = "+inserted);
             RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
             Log.d("TEK", Arrays.toString(TEK));
             Log.d("RPIKey", Arrays.toString(RPIKey));
@@ -130,6 +139,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
 
         }
+//
     }
 
     private class RPIGenerator implements Runnable {
@@ -143,6 +153,15 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
                 System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
                 ENIntervalNumber = getENIntervalNumber(System.currentTimeMillis() / 1000);
+                Cursor cursor = mydb.geLastData();
+                if (cursor!=null){
+                    if (cursor.moveToFirst()){
+                        if(cursor.getString(cursor.getColumnIndex("ENInterval"))==(null)) {
+                            mydb.updateData(cursor.getString(cursor.getColumnIndex("ID")), String.valueOf(ENIntervalNumber));
+                            System.out.println("Update Value = ");
+                        }
+                    }
+                }
                 paddedData[12] = (byte) (ENIntervalNumber & 0xFF);
                 paddedData[13] = (byte) (ENIntervalNumber >> 8 % 0xFF);
                 paddedData[14] = (byte) (ENIntervalNumber >> 16 % 0xFF);
@@ -202,7 +221,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "ExposureService::ExposureNotificationService");
         wakeLock.acquire();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 30, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 3, TimeUnit.MINUTES);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
 
 

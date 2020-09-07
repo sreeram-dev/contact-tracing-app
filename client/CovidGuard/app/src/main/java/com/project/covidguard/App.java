@@ -12,6 +12,7 @@ import java.security.Security;
 
 public class App extends Application {
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
+static DatabaseHelper mydb;
 
     @Override
     public void onCreate() {
@@ -19,6 +20,8 @@ public class App extends Application {
 
         Security.insertProviderAt(Conscrypt.newProvider(), 1);
         createNotificationChannel();
+        mydb=new DatabaseHelper(this);
+
     }
 
     private void createNotificationChannel() {
