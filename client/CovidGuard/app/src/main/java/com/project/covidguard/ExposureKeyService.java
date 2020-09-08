@@ -47,7 +47,7 @@ import at.favre.lib.crypto.HKDF;
 
 import static android.content.ContentValues.TAG;
 import static com.project.covidguard.App.CHANNEL_ID;
-import static com.project.covidguard.App.mydb;
+import static com.project.covidguard.App.KEY_SERVER_DB;
 
 
 
@@ -122,7 +122,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
     private static class TEKGenerator implements Runnable {
 
-//    DatabaseHelper mydb;
+
         @SuppressLint("SecureRandom")
 
         @Override
@@ -131,8 +131,8 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
             byte[] info = "EN-RPIK".getBytes();
 //            TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
             TEK = secureRandom.generateSeed(16);
-//            mydb=new DatabaseHelper(this);
-            Boolean inserted=mydb.insertData(Arrays.toString(TEK));
+
+            Boolean inserted = KEY_SERVER_DB.insertData(Arrays.toString(TEK));
             System.out.println("Inserted Value = "+inserted);
             RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
             Log.d("TEK", Arrays.toString(TEK));
@@ -141,7 +141,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
 
         }
-//
+
     }
 
     private class RPIGenerator implements Runnable {
@@ -155,11 +155,11 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
                 System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
                 ENIntervalNumber = getENIntervalNumber(System.currentTimeMillis() / 1000);
-                Cursor cursor = mydb.geLastData();
+                Cursor cursor = KEY_SERVER_DB.geLastData();
                 if (cursor!=null){
                     if (cursor.moveToFirst()){
                         if(cursor.getString(cursor.getColumnIndex("ENInterval"))==(null)) {
-                            mydb.updateData(cursor.getString(cursor.getColumnIndex("ID")), String.valueOf(ENIntervalNumber));
+                            KEY_SERVER_DB.updateData(cursor.getString(cursor.getColumnIndex("ID")), String.valueOf(ENIntervalNumber));
                             System.out.println("Update Value = ");
                         }
                     }
