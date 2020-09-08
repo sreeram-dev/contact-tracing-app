@@ -15,6 +15,9 @@ import java.security.Security;
 
 public class App extends Application {
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
+
+    static DatabaseHelper KEY_SERVER_DB;
+
     private static final String LOG_TAG = "CovidGuardApplication";
 
     // Executor Pool to execute network, thread and IO
@@ -38,6 +41,8 @@ public class App extends Application {
             Security.insertProviderAt(Conscrypt.newProvider(), 1);
         }
         createNotificationChannel();
+        KEY_SERVER_DB=new DatabaseHelper(this);
+
     }
 
     private void createNotificationChannel() {
