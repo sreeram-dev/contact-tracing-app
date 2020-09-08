@@ -1,7 +1,5 @@
 package com.project.covidguard.web.services;
 
-
-import android.app.Application;
 import android.content.Context;
 
 import com.project.covidguard.AppExecutors;

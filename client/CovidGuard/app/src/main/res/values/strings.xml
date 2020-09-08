@@ -15,6 +15,8 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="preference_file_key">com.project.covidguard.TOKEN_FILE</string>
+    <string name="encryption_master_key_alias"> com.project.covidguard.MASTER_AES_SHARED_PREF</string>
     <string name="splash_text">Checking for permissions and registration</string>
+    <string name="dont_allow">Don\'t Allow</string>
 
 </resources>
