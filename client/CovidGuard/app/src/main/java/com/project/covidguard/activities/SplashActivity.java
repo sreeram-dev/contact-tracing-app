@@ -272,6 +272,15 @@ public class SplashActivity extends AppCompatActivity {
             }
 
         });
+
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                showLimitedFunctionalityDialog(deniedPermissions);
+
+            }
+        });
+
         builder.create().show();
     }
 
@@ -285,13 +294,7 @@ public class SplashActivity extends AppCompatActivity {
         }
         builder.setMessage(sb.toString());
         builder.setPositiveButton(android.R.string.ok, null);
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
 
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-            }
-
-        });
         builder.create().show();
     }
 
