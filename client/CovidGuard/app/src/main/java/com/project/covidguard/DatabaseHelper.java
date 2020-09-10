@@ -5,6 +5,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.sql.Date;
 
@@ -46,10 +50,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return true;
     }
 
-    public Cursor getAllData() {
+    public JSONArray getAllData() {
+
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("select * from "+TABLE_NAME,null);
-        return res;
+        Cursor cursor = db.rawQuery("select * from "+TABLE_NAME+" Order by ID ",null);
+        JSONArray resultSet = new JSONArray();
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            int totalColumn = cursor.getColumnCount();
+            JSONObject rowObject = new JSONObject();
+            for (int i = 0; i < totalColumn; i++) {
+                if (cursor.getColumnName(i) != null) {
+                    try {
+                        rowObject.put(cursor.getColumnName(i),
+                                cursor.getString(i));
+                    } catch (Exception e) {
+                        Log.d("TAG", "error");
+                    }
+                }
+            }
+            resultSet.put(rowObject);
+            cursor.moveToNext();
+        }
+
+        cursor.close();
+        return resultSet;
     }
 
     public Cursor geLastData() {

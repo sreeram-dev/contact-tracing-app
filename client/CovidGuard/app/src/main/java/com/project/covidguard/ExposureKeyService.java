@@ -64,7 +64,6 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     ScheduledExecutorService scheduleTaskExecutor = Executors.newScheduledThreadPool(5);
     TEKGenerator tekGenerator;
     RPIGenerator rpiGenerator;
-    DatabaseHelper databaseHelper;
     BeaconManager beaconManager;
 
     static volatile Cipher cipher;

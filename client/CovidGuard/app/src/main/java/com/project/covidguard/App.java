@@ -17,7 +17,7 @@ public class App extends Application {
 
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
 
-    static DatabaseHelper KEY_SERVER_DB;
+    public static DatabaseHelper KEY_SERVER_DB;
 
     private static final String LOG_TAG = "CovidGuardApplication";
 
