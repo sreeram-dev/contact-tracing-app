@@ -10,7 +10,7 @@ import com.project.covidguard.data.entities.TEK;
 import java.util.List;
 
 @Dao
-public interface TEKRepository {
+public interface  TEKRepository {
 
     @Insert
     void insertTEK(TEK tek);

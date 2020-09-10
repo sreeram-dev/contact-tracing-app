@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.sql.Date;
+
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "tek.db";
@@ -61,6 +63,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues values =  new ContentValues();
         values.put("ENInterval", valueOf);
         db.update(TABLE_NAME, values,"ID = ?",new String[]{id});
+        return true;
+    }
+    public void deleteData () {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM covid_table WHERE timestamp <= date('now','-15 day')");
+
+    }
+
+    public Boolean updateData1() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values =  new ContentValues();
+        values.put(COL_3, "2020-08-10 05:18:00");
+        db.update(TABLE_NAME, values,"ID = ?",new String[]{"1"});
         return true;
     }
 }
