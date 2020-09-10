@@ -54,6 +54,7 @@ import static com.project.covidguard.App.KEY_SERVER_DB;
 public class ExposureKeyService extends Service implements BeaconConsumer {
 
     volatile static byte[] TEK;
+    volatile static byte[] TEK1;
     volatile static byte[] RPIKey;
     volatile static byte[] rollingProximityID;
     static SecureRandom secureRandom;
@@ -129,11 +130,16 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         public void run() {
 
             byte[] info = "EN-RPIK".getBytes();
-//            TEK = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
+             //TEK1 = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
             TEK = secureRandom.generateSeed(16);
 
             Boolean inserted = KEY_SERVER_DB.insertData(Arrays.toString(TEK));
+
+
+//            KEY_SERVER_DB.updateData1();
+            KEY_SERVER_DB.deleteData();
             System.out.println("Inserted Value = "+inserted);
+
             RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
             Log.d("TEK", Arrays.toString(TEK));
             Log.d("RPIKey", Arrays.toString(RPIKey));
@@ -223,7 +229,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "ExposureService::ExposureNotificationService");
         wakeLock.acquire();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 3, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 1, TimeUnit.MINUTES);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
 
 
