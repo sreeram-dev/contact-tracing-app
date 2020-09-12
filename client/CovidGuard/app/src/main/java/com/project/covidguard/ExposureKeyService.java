@@ -230,7 +230,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "ExposureService::ExposureNotificationService");
         wakeLock.acquire();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 3, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 30, TimeUnit.MINUTES);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
 
 
