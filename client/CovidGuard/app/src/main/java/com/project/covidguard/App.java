@@ -20,6 +20,7 @@ public class App extends Application {
     static DatabaseHelper KEY_SERVER_DB;
     static DatabaseHelper1 RPI_SERVER_DB;
 
+
     private static final String LOG_TAG = "CovidGuardApplication";
 
     // Executor Pool to execute network, thread and IO

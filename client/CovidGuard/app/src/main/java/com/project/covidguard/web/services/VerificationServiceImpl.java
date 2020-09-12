@@ -10,6 +10,8 @@ import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 
+import org.json.JSONArray;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +43,8 @@ public class VerificationServiceImpl implements VerificationService {
         this.responseJsonAdapter = moshi.adapter(RegisterUUIDResponse.class);
         this.errorResponseJsonAdapter = moshi.adapter(ErrorResponse.class);
     }
+
+
 
     public String registerUUIDAndGetToken(String uuid) throws IOException {
 

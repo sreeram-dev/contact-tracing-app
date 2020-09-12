@@ -36,9 +36,11 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import static com.project.covidguard.App.KEY_SERVER_DB;
+
 
 public class SplashActivity extends AppCompatActivity {
-    private static final int PERMISSION_MAIN_REQUEST= 1;
+    private static final int PERMISSION_MAIN_REQUEST = 1;
     private static final int PERMISSION_REPEAT_REQUEST = 2;
 
     private static final String LOG_TAG = SplashActivity.class.getName();
@@ -61,10 +63,10 @@ public class SplashActivity extends AppCompatActivity {
                 Manifest.permission.ACCESS_FINE_LOCATION // manual permission required.
         };
 
-        ArrayList<String>  permissionsNeeded = new ArrayList<>();
+        ArrayList<String> permissionsNeeded = new ArrayList<>();
 
         // Permissions needed
-        for (String permission: permissions) {
+        for (String permission : permissions) {
             if (this.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionsNeeded.add(permission);
             }
@@ -89,10 +91,10 @@ public class SplashActivity extends AppCompatActivity {
         };
 
 
-        switch(requestCode) {
+        switch (requestCode) {
             case PERMISSION_MAIN_REQUEST:
                 ArrayList<String> deniedPermissions = new ArrayList<>();
-                for (int i=0; i<permissions.length; i++) {
+                for (int i = 0; i < permissions.length; i++) {
                     if (compulsoryPermissions.contains(permissions[i]) &&
                             grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         deniedPermissions.add(permissions[i]);
@@ -108,7 +110,7 @@ public class SplashActivity extends AppCompatActivity {
 
             case PERMISSION_REPEAT_REQUEST:
                 deniedPermissions = new ArrayList<>();
-                for (int i=0; i<permissions.length; i++) {
+                for (int i = 0; i < permissions.length; i++) {
                     if (compulsoryPermissions.contains(permissions[i]) &&
                             grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         deniedPermissions.add(permissions[i]);
@@ -143,8 +145,7 @@ public class SplashActivity extends AppCompatActivity {
                 });
                 builder.show();
             }
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Bluetooth LE not available");
             builder.setMessage("Sorry, this device does not support Bluetooth LE.");
@@ -179,6 +180,11 @@ public class SplashActivity extends AppCompatActivity {
         serviceIntent.putExtra("inputExtra", "Do not force stop this");
         ContextCompat.startForegroundService(this, serviceIntent);
         setContentView(R.layout.diagnose_fragment);
+    }
+
+    public void clickSubmitHandler(View view) {
+        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
+        Log.d("Recent TEKs from SQLite", String.valueOf(KEY_SERVER_DB.getAllData()));
     }
 
     private void generateAndStoreToken(String uuid) {
@@ -272,6 +278,15 @@ public class SplashActivity extends AppCompatActivity {
             }
 
         });
+
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                showLimitedFunctionalityDialog(deniedPermissions);
+
+            }
+        });
+
         builder.create().show();
     }
 
@@ -280,18 +295,12 @@ public class SplashActivity extends AppCompatActivity {
         builder.setTitle("Functionality limited");
         StringBuilder sb = new StringBuilder();
         sb.append("The functionality of the app is limited as the required permissions have not been granted\n");
-        for (int i=0; i<deniedPermissions.size(); i++) {
-            sb.append((i+1) + ": " + deniedPermissions.get(i) + "\n");
+        for (int i = 0; i < deniedPermissions.size(); i++) {
+            sb.append((i + 1) + ": " + deniedPermissions.get(i) + "\n");
         }
         builder.setMessage(sb.toString());
         builder.setPositiveButton(android.R.string.ok, null);
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
 
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-            }
-
-        });
         builder.create().show();
     }
 
