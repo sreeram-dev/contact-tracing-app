@@ -48,7 +48,7 @@ import at.favre.lib.crypto.HKDF;
 import static android.content.ContentValues.TAG;
 import static com.project.covidguard.App.CHANNEL_ID;
 import static com.project.covidguard.App.KEY_SERVER_DB;
-
+import static com.project.covidguard.App.RPI_SERVER_DB;
 
 
 public class ExposureKeyService extends Service implements BeaconConsumer {
@@ -65,6 +65,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     TEKGenerator tekGenerator;
     RPIGenerator rpiGenerator;
     DatabaseHelper databaseHelper;
+    DatabaseHelper1 databaseHelper1;
     BeaconManager beaconManager;
 
     static volatile Cipher cipher;
@@ -102,8 +103,8 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
         beaconManager.addRangeNotifier((Collection<Beacon> beacons, Region region) -> {
             if (beacons.size() != 0) {
-
                 Beacon beacon = getLastElement(beacons);
+                Boolean inserted = RPI_SERVER_DB.insertData(beacon.getId1().toString());
                 Log.d(TAG, "didRangeBeaconsInRegion: UUID: " + beacon.getId1()
                         + "\nRSSI: " + beacon.getRssi()
                         + "\nTX: " + beacon.getTxPower()
@@ -229,7 +230,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "ExposureService::ExposureNotificationService");
         wakeLock.acquire();
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 1, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 3, TimeUnit.MINUTES);
         scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
 
 
