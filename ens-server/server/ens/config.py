@@ -9,7 +9,7 @@ class AppConfig(object):
     STATIC_FOLDER = join(SOURCE_DIR, 'static')
     TEMPLATE_FOLDER = join(SOURCE_DIR, 'templates')
     LOGGER_NAME = 'prod-logger'
-    SERVER_NAME = 'ens-server.appspot.com'
+    SERVER_NAME = 'ens-server.ts.r.appspot.com'
 
 
 class DebugAppConfig(object):
