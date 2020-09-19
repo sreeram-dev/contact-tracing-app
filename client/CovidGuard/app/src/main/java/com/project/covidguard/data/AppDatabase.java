@@ -19,7 +19,7 @@ import com.project.covidguard.data.entities.TEK;
  * <RPI> </RPI>
  *
  */
-@Database(entities = {TEK.class, RPI.class}, version = 1, exportSchema = false)
+@Database(entities = {TEK.class, RPI.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String LOG_TAG = AppDatabase.class.getSimpleName();
     private static final Object LOCK = new Object();

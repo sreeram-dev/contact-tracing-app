@@ -22,6 +22,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
@@ -189,9 +190,14 @@ public class SplashActivity extends AppCompatActivity {
     public void clickSubmitHandler(View view) {
         Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
         TEKRepository repo = new TEKRepository(getApplicationContext());
-        List<TEK> teks = repo.getAllTEKs().getValue();
-        //Log.d(LOG_TAG, "Recent TEKS from SQLITE: " + teks.size());
-//        Log.d("Recent TEKs from SQLite", String.valueOf(KEY_SERVER_DB.getAllData()));
+        LiveData<List<TEK>> teks = repo.getAllTEKs();
+        teks.observe(this, new Observer<List<TEK>>() {
+            @Override
+            public void onChanged(List<TEK> teks) {
+                Log.d(LOG_TAG, "Recent TEKS from SQLITE: " + teks.size());
+            }
+        });
+
     }
 
     private void generateAndStoreToken(String uuid) {

@@ -1,0 +1,108 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "0443d870e1a05744438af120dd0fb353",
+    "entities": [
+      {
+        "tableName": "teks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tek_id` TEXT, `en_interval_number` INTEGER, `created_at` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tekId",
+            "columnName": "tek_id",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "enIntervalNumber",
+            "columnName": "en_interval_number",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [
+          {
+            "name": "index_teks_tek_id",
+            "unique": true,
+            "columnNames": [
+              "tek_id"
+            ],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_teks_tek_id` ON `${TABLE_NAME}` (`tek_id`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "rpis",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `rpi` TEXT, `aem` TEXT, `received_at` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rpi",
+            "columnName": "rpi",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "aem",
+            "columnName": "aem",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "receivedAt",
+            "columnName": "received_at",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [
+          {
+            "name": "index_rpis_rpi",
+            "unique": true,
+            "columnNames": [
+              "rpi"
+            ],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_rpis_rpi` ON `${TABLE_NAME}` (`rpi`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0443d870e1a05744438af120dd0fb353')"
+    ]
+  }
+}

@@ -1,11 +1,11 @@
 package com.project.covidguard.data.entities;
 
-
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
 
 @Entity(tableName = "teks", indices = {@Index(value = {"tek_id"}, unique = true)})
 public class TEK {
@@ -68,5 +68,13 @@ public class TEK {
 
     public Long getCreatedAt() {
         return this.createdAt;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getTekId() +" ");
+        sb.append(this.getEnIntervalNumber());
+        return sb.toString();
     }
 }

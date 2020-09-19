@@ -14,6 +14,7 @@ import com.project.covidguard.data.entities.TEK;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.threeten.bp.LocalDateTime;
@@ -49,12 +50,11 @@ public class TEKRepository {
         // TODO: Time to use RxJava - https://github.com/ReactiveX/RxJava
         if (mTeks == null) {
             Long timestamp = LocalDateTime.now().minusDays(30).atZone(zoneId).toEpochSecond();
+
             try {
                 Future<LiveData<List<TEK>>> future = executors.diskIO().submit(
                     () -> mTekDao.getTEKFromTimeStamp(timestamp));
-
                 mTeks = future.get();
-                Log.d(LOG_TAG, "TEKS in the database: " + String.valueOf(mTeks.getValue()));
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
                 Log.e(LOG_TAG, "Could not fetch all teks - Interrupted Exception");
@@ -64,6 +64,7 @@ public class TEKRepository {
                 Log.e(LOG_TAG, "Could not fetch all teks - Executed Exception");
                 mTeks = null;
             }
+
         }
 
         return mTeks;
@@ -92,12 +93,11 @@ public class TEKRepository {
 
     /**
      * Stores the TEK and ENIntervalNumber
-     * @param tekArray - Byte Array representing the TEK
+     * @param tekString - Encoded String representing the TEK
      * @param enIntervalNumber - ENInterval Number when the TEK is generated
      * @return
      */
-    public void storeTEKWithEnIntervalNumber(byte[] tekArray, Long enIntervalNumber) {
-        String tekString = Arrays.toString(tekArray);
+    public void storeTEKWithEnIntervalNumber(String tekString, Long enIntervalNumber) {
         Long createdAt = LocalDateTime.now().atZone(zoneId).toEpochSecond();
         TEK tek = new TEK(tekString, enIntervalNumber, createdAt);
         executors.diskIO().submit(new Runnable() {
@@ -115,5 +115,41 @@ public class TEKRepository {
     public void deleteStaleTEKs()  {
         Long timestamp = LocalDateTime.now().minusDays(30).atZone(zoneId).toEpochSecond();
         executors.diskIO().submit(() -> mTekDao.deleteBeforeTimeStamp(timestamp));
+    }
+
+    /**
+     * Check if TEK exists for the interval
+     * @param enIntervalNumber
+     */
+    public Boolean tekExistsForInterval(Long enIntervalNumber) {
+        Future<TEK> future = executors.diskIO().submit(
+                () -> mTekDao.fetchByENInterval(enIntervalNumber));
+
+        try {
+            TEK tek = future.get();
+            if (tek == null) {
+                return false;
+            }
+
+            return true;
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public TEK getTekWithInterval(Long enIntervalNumber) {
+        Future<TEK> future = executors.diskIO().submit(
+                () -> mTekDao.fetchByENInterval(enIntervalNumber));
+
+        try {
+            TEK tek = future.get();
+            return tek;
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
     }
 }

@@ -18,9 +18,8 @@ public class App extends Application {
 
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
 
-    public static DatabaseHelper KEY_SERVER_DB;
-    static DatabaseHelper1 RPI_SERVER_DB;
-
+    //public static DatabaseHelper KEY_SERVER_DB;
+    //static DatabaseHelper1 RPI_SERVER_DB;
 
     private static final String LOG_TAG = "CovidGuardApplication";
 
@@ -46,8 +45,11 @@ public class App extends Application {
             Security.insertProviderAt(Conscrypt.newProvider(), 1);
         }
         createNotificationChannel();
+
+/*
         KEY_SERVER_DB=new DatabaseHelper(this);
         RPI_SERVER_DB=new DatabaseHelper1(this);
+*/
 
     }
 
