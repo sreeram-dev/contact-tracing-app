@@ -1,5 +1,6 @@
 package com.project.covidguard.web;
 
+import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.squareup.moshi.Moshi;
 
 import java.io.IOException;
@@ -23,7 +24,8 @@ public class AsyncHttpTask implements Callable {
 
     public AsyncHttpTask(Request request) {
         this.request = request;
-        this.client = new OkHttpClient();
+        this.client = new OkHttpClient.Builder()
+                .addInterceptor(new StethoInterceptor()).build();
     }
 
     @Override

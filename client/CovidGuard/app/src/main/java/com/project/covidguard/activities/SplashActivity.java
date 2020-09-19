@@ -21,11 +21,14 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LiveData;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
+import com.project.covidguard.data.entities.TEK;
+import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.web.services.VerificationService;
 import com.project.covidguard.web.services.VerificationServiceImpl;
 
@@ -34,9 +37,10 @@ import org.altbeacon.beacon.BeaconManager;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-import static com.project.covidguard.App.KEY_SERVER_DB;
+//import static com.project.covidguard.App.KEY_SERVER_DB;
 
 
 public class SplashActivity extends AppCompatActivity {
@@ -184,7 +188,10 @@ public class SplashActivity extends AppCompatActivity {
 
     public void clickSubmitHandler(View view) {
         Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
-        Log.d("Recent TEKs from SQLite", String.valueOf(KEY_SERVER_DB.getAllData()));
+        TEKRepository repo = new TEKRepository(getApplicationContext());
+        List<TEK> teks = repo.getAllTEKs().getValue();
+        //Log.d(LOG_TAG, "Recent TEKS from SQLITE: " + teks.size());
+//        Log.d("Recent TEKs from SQLite", String.valueOf(KEY_SERVER_DB.getAllData()));
     }
 
     private void generateAndStoreToken(String uuid) {

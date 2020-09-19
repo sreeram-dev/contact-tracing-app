@@ -17,6 +17,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.project.covidguard.activities.SplashActivity;
+import com.project.covidguard.data.repositories.RPIRepository;
+
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -25,6 +27,9 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
 import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.Region;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.ZoneId;
+import org.threeten.bp.ZonedDateTime;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -41,7 +46,6 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.transform.Source;
 
 import at.favre.lib.crypto.HKDF;
 
@@ -49,6 +53,7 @@ import static android.content.ContentValues.TAG;
 import static com.project.covidguard.App.CHANNEL_ID;
 import static com.project.covidguard.App.KEY_SERVER_DB;
 import static com.project.covidguard.App.RPI_SERVER_DB;
+
 
 
 public class ExposureKeyService extends Service implements BeaconConsumer {
@@ -72,6 +77,16 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
 
     volatile static SecretKeySpec aesKey;
+    private RPIRepository rpiRepo;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        rpiRepo = new RPIRepository(getApplicationContext());
+        beaconManager = BeaconManager.getInstanceForApplication(this);
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("s:0-1=fd6f,p:-:-59,i:2-17"));
+        beaconManager.bind(this);
+    }
 
 
     static {
@@ -135,7 +150,6 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
             TEK = secureRandom.generateSeed(16);
 
             Boolean inserted = KEY_SERVER_DB.insertData(Arrays.toString(TEK));
-
 
 //            KEY_SERVER_DB.updateData1();
             KEY_SERVER_DB.deleteData();
@@ -208,14 +222,6 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        beaconManager = BeaconManager.getInstanceForApplication(this);
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("s:0-1=fd6f,p:-:-59,i:2-17"));
-        beaconManager.bind(this);
     }
 
     @SuppressLint({"GetInstance", "WakelockTimeout"})

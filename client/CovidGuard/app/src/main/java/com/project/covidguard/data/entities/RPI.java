@@ -30,16 +30,16 @@ public class RPI {
      * Store only the second precision value since epochs passed
      */
     @ColumnInfo(name = "received_at")
-    private Integer receivedAt;
+    private Long receivedAt;
 
     @Ignore
-    public RPI(String rpi, String encryptedAEM, Integer epoch) {
+    public RPI(String rpi, String encryptedAEM, Long epoch) {
         this.rpi = rpi;
         this.aem = encryptedAEM;
         this.receivedAt = epoch;
     }
 
-    public RPI(int id, String rpi, String aem, Integer receivedAt) {
+    public RPI(int id, String rpi, String aem, Long receivedAt) {
         this.id = id;
         this.rpi = rpi;
         this.aem = aem;
@@ -62,11 +62,11 @@ public class RPI {
         return this.aem;
     }
 
-    public Integer getReceivedAt() {
+    public Long getReceivedAt() {
         return this.receivedAt;
     }
 
-    public void setReceivedAt(Integer receivedAt) {
+    public void setReceivedAt(Long receivedAt) {
         this.receivedAt = receivedAt;
     }
 }
