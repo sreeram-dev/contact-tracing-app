@@ -1,4 +1,4 @@
-runtime: python37
+runtime: python38
 
 # instance to run the app engine on - F1 is free tier
 instance_class: F1
