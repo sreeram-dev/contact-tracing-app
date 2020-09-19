@@ -1,6 +1,8 @@
-from ens.app import app
+# -*- coding:utf-8 -*-
 
-from ens.base.views import IndexView, WarmupView
+from lis.app import app
+
+from lis.base.views import IndexView, WarmupView
 
 
 app.add_url_rule('/', view_func=IndexView.as_view('index'))
