@@ -18,9 +18,6 @@ public class App extends Application {
 
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
 
-    //public static DatabaseHelper KEY_SERVER_DB;
-    //static DatabaseHelper1 RPI_SERVER_DB;
-
     private static final String LOG_TAG = "CovidGuardApplication";
 
     // Executor Pool to execute network, thread and IO
@@ -36,6 +33,7 @@ public class App extends Application {
 
         Log.d(LOG_TAG, "Initialising App Executors");
         mExecutors = AppExecutors.getInstance();
+
         Log.d(LOG_TAG, "Initialising SQLITE Database");
         mDB = AppDatabase.getDatabase(getApplicationContext());
 
@@ -45,12 +43,6 @@ public class App extends Application {
             Security.insertProviderAt(Conscrypt.newProvider(), 1);
         }
         createNotificationChannel();
-
-/*
-        KEY_SERVER_DB=new DatabaseHelper(this);
-        RPI_SERVER_DB=new DatabaseHelper1(this);
-*/
-
     }
 
     private void createNotificationChannel() {

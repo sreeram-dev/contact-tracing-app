@@ -41,8 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-//import static com.project.covidguard.App.KEY_SERVER_DB;
-
 
 public class SplashActivity extends AppCompatActivity {
     private static final int PERMISSION_MAIN_REQUEST = 1;

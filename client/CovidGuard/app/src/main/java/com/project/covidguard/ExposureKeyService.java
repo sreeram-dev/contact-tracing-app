@@ -52,10 +52,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import at.favre.lib.crypto.HKDF;
 
-import static android.content.ContentValues.TAG;
 import static com.project.covidguard.App.CHANNEL_ID;
-//import static com.project.covidguard.App.KEY_SERVER_DB;
-//import static com.project.covidguard.App.RPI_SERVER_DB;
 
 
 
@@ -176,13 +173,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
                 Log.d(LOG_TAG, "tekExists: " + " " + Arrays.toString(TEK));
 
             }
-/*
-            Boolean inserted = KEY_SERVER_DB.insertData(Arrays.toString(TEK));
 
-//          KEY_SERVER_DB.updateData1();
-            KEY_SERVER_DB.deleteData();
-            System.out.println("Inserted Value = "+inserted);
-*/
             RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
             Log.d("TEK", Arrays.toString(TEK));
             Log.d("RPIKey", Arrays.toString(RPIKey));
