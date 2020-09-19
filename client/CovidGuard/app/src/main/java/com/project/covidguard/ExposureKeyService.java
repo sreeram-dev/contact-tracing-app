@@ -67,7 +67,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     volatile static byte[] TEK1;
     volatile static byte[] RPIKey;
     volatile static byte[] rollingProximityID;
-    volatile static long ENIntervalNumber;
+    //volatile static long ENIntervalNumber;
     static volatile Cipher cipher;
     volatile static SecretKeySpec aesKey;
 
@@ -84,8 +84,6 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     private static final String BEACON_LAYOUT = "s:0-1=fd6f,p:-:-59,i:2-17";
 
     ScheduledExecutorService scheduleTaskExecutor = Executors.newScheduledThreadPool(5);
-    TEKGenerator tekGenerator;
-    RPIGenerator rpiGenerator;
 
     BeaconManager beaconManager;
 
@@ -109,7 +107,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     }
 
     public static long getENIntervalNumber(long secsSinceEpoch) {
-        return secsSinceEpoch / (1000 * (SECS_PER_MIN * MINUTES_PER_INTERVAL));
+        return secsSinceEpoch / (SECS_PER_MIN * MINUTES_PER_INTERVAL);
     }
 
     public static <Beacon> Beacon getLastElement(final Iterable<Beacon> elements) {
@@ -147,6 +145,34 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         }
     }
 
+    @SuppressLint({"GetInstance", "WakelockTimeout"})
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        String input = "Do not force stop this";
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "ExposureService::ExposureNotificationService");
+        wakeLock.acquire();
+
+        scheduleTaskExecutor.scheduleAtFixedRate(new TEKGenerator(getApplicationContext()), 0, 5, TimeUnit.MINUTES);
+        scheduleTaskExecutor.scheduleAtFixedRate(new RPIGenerator(), 0, 1, TimeUnit.MINUTES);
+
+        Intent notificationIntent = new Intent(this, SplashActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, 0);
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Exposure Notification Service")
+                .setContentText(input)
+                .setSmallIcon(R.drawable.ic_android)
+                .setContentIntent(pendingIntent)
+                .build();
+
+        startForeground(1, notification);
+        return START_STICKY;
+    }
+
     private static class TEKGenerator implements Runnable {
 
         private TEKRepository tekRepo;
@@ -163,16 +189,10 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
             TEK = secureRandom.generateSeed(16);
             ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
             Long enIntervalNumber = getENIntervalNumber(time.toEpochSecond());
-            if (!tekRepo.tekExistsForInterval(enIntervalNumber)) {
-                String encodedTek = Base64.encodeToString(TEK, Base64.DEFAULT);
-                tekRepo.storeTEKWithEnIntervalNumber(encodedTek, enIntervalNumber);
-            } else {
-                com.project.covidguard.data.entities.TEK tek  = tekRepo.getTekWithInterval(enIntervalNumber);
-                String encodedTek = tek.getTekId();
-                TEK = Base64.decode(encodedTek, Base64.DEFAULT);
-                Log.d(LOG_TAG, "tekExists: " + " " + Arrays.toString(TEK));
-
-            }
+            String encodedTek = Base64.encodeToString(TEK, Base64.DEFAULT);
+            tekRepo.storeTEKWithEnIntervalNumber(encodedTek, enIntervalNumber);
+            Log.d(LOG_TAG + ":TEKGENERATOR",
+                    "Payload Tek Generated: enIntervalNumber: " + enIntervalNumber + " TEK: "+  Arrays.toString(TEK));
 
             RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
             Log.d("TEK", Arrays.toString(TEK));
@@ -192,18 +212,17 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
                 byte[] paddedData = new byte[16];
 
                 System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
-                ENIntervalNumber = getENIntervalNumber(System.currentTimeMillis());
-                paddedData[12] = (byte) (ENIntervalNumber & 0xFF);
-                paddedData[13] = (byte) (ENIntervalNumber >> 8 % 0xFF);
-                paddedData[14] = (byte) (ENIntervalNumber >> 16 % 0xFF);
-                paddedData[15] = (byte) (ENIntervalNumber >> 24 % 0xFF);
+                ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
+                Long enIntervalNumber = getENIntervalNumber(time.toEpochSecond());
+                paddedData[12] = (byte) (enIntervalNumber & 0xFF);
+                paddedData[13] = (byte) (enIntervalNumber >> 8 % 0xFF);
+                paddedData[14] = (byte) (enIntervalNumber >> 16 % 0xFF);
+                paddedData[15] = (byte) (enIntervalNumber >> 24 % 0xFF);
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey);
                 rollingProximityID = cipher.doFinal(paddedData);
-                Log.d("ENIntervalNumber", String.valueOf(ENIntervalNumber));
-                Log.d("RPI", Arrays.toString(rollingProximityID));
-                Log.d("RPIString", Identifier.fromBytes(rollingProximityID, 0, 16, false).toString());
-                BeaconParser beaconParser = new BeaconParser()
-                        .setBeaconLayout(BEACON_LAYOUT);
+                Log.d(LOG_TAG + ":RPIGENERATOR", "Payload ENIntervalNumber: " + enIntervalNumber + " TEK: " + Arrays.toString(TEK) + " RPI: " + Arrays.toString(rollingProximityID));
+                Log.d(LOG_TAG + ":RPIGENERATOR", "RPIString: " + Identifier.fromBytes(rollingProximityID, 0, 16, false).toString());
+                BeaconParser beaconParser = new BeaconParser().setBeaconLayout(BEACON_LAYOUT);
 
                 Beacon beacon = new Beacon.Builder()
                         .setId1(Identifier.fromBytes(rollingProximityID, 0, 16, false).toString())
@@ -236,36 +255,6 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();
         }
-    }
-
-    @SuppressLint({"GetInstance", "WakelockTimeout"})
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        String input = "Do not force stop this";
-
-        tekGenerator = new TEKGenerator(getApplicationContext());
-        rpiGenerator = new RPIGenerator();
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "ExposureService::ExposureNotificationService");
-        wakeLock.acquire();
-
-        scheduleTaskExecutor.scheduleAtFixedRate(tekGenerator, 0, 30, TimeUnit.MINUTES);
-        scheduleTaskExecutor.scheduleAtFixedRate(rpiGenerator, 0, 1, TimeUnit.MINUTES);
-
-        Intent notificationIntent = new Intent(this, SplashActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Exposure Notification Service")
-                .setContentText(input)
-                .setSmallIcon(R.drawable.ic_android)
-                .setContentIntent(pendingIntent)
-                .build();
-
-        startForeground(1, notification);
-        return START_STICKY;
     }
 
     @Override
