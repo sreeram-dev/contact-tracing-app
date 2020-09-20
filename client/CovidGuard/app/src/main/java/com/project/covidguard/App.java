@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.os.Build;
 import android.util.Log;
 
+import com.facebook.stetho.Stetho;
 import com.project.covidguard.data.AppDatabase;
 
 import org.conscrypt.Conscrypt;
@@ -16,10 +17,6 @@ import java.security.Security;
 public class App extends Application {
 
     public static final String CHANNEL_ID = "temporaryExposureKeyChannel";
-
-    public static DatabaseHelper KEY_SERVER_DB;
-    static DatabaseHelper1 RPI_SERVER_DB;
-
 
     private static final String LOG_TAG = "CovidGuardApplication";
 
@@ -32,11 +29,13 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Stetho.initializeWithDefaults(this);
 
         Log.d(LOG_TAG, "Initialising App Executors");
         mExecutors = AppExecutors.getInstance();
+
         Log.d(LOG_TAG, "Initialising SQLITE Database");
-        mDB = AppDatabase.getInstance(getApplicationContext());
+        mDB = AppDatabase.getDatabase(getApplicationContext());
 
         // Add conscrypt if the android version is less than SDK Level 29
         // TLS 1.3 is by default in Android Version Q
@@ -44,9 +43,6 @@ public class App extends Application {
             Security.insertProviderAt(Conscrypt.newProvider(), 1);
         }
         createNotificationChannel();
-        KEY_SERVER_DB=new DatabaseHelper(this);
-        RPI_SERVER_DB=new DatabaseHelper1(this);
-
     }
 
     private void createNotificationChannel() {
