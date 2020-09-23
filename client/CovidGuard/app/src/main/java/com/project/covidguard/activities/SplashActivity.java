@@ -26,6 +26,7 @@ import androidx.lifecycle.Observer;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
+import com.project.covidguard.AppExecutors;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.data.entities.TEK;

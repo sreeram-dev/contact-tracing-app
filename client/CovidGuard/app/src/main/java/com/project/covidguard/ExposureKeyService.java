@@ -4,14 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.le.AdvertiseCallback;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -20,83 +17,58 @@ import androidx.core.app.NotificationCompat;
 
 import com.project.covidguard.activities.SplashActivity;
 import com.project.covidguard.data.repositories.RPIRepository;
-import com.project.covidguard.data.repositories.TEKRepository;
-
+import com.project.covidguard.gaen.BLEAdvertiser;
+import com.project.covidguard.gaen.GAENConstants;
+import com.project.covidguard.gaen.RPIGenerator;
+import com.project.covidguard.gaen.Utils;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.BeaconTransmitter;
-import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.Region;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.ZoneId;
 import org.threeten.bp.ZonedDateTime;
 
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
-
-import at.favre.lib.crypto.HKDF;
+import java.util.List;
+import java.util.Observer;
 
 import static com.project.covidguard.App.CHANNEL_ID;
+import static com.project.covidguard.gaen.GAENConstants.BEACON_LAYOUT;
+import static com.project.covidguard.gaen.GAENConstants.RPI_INTERVAL;
+import static com.project.covidguard.gaen.GAENConstants.RPI_TIME_UNIT;
 
 
-
+/**
+ * Schedule with an rpi key at a fixed rate.
+ * TEK - every 30 minutes - Generates an RPIKey - is this thread still running? no? after generating RPIKey? exit the thread?
+ * RPI Generator(RPIKey) - > old code - it is a shared variable.
+ * RPIKey call 1 - first call -- generate an RPI -- start advertising -- will this advertisement stop?
+ * after 1 minute
+ * RPI Generator - second call -- generate an RPI -- start advertising -- previous advertisement stops, default channel, new advertisement starts.
+ * After 30 minutes --
+ * Generate new TEK and RPIKey -
+ * -----
+ * OLD TEK, RPIKey will still be scheduled? old code - shared variable - new code - no shared variable - new code - how can we stop the old rpi generator scheduled service.
+ * Old code -
+ * They will use the same RPIKey - multiple scheduled RPIGenerator threads - how are we stopping the first scheduled thread.
+ * Close old Scheduled Server of Old TEK based RPI Generator
+ * Start new Scheduled Server of New TEK based RPI Generator
+ */
 public class ExposureKeyService extends Service implements BeaconConsumer {
 
     private static final String LOG_TAG = ExposureKeyService.class.getCanonicalName();
-    private static final Integer SECS_PER_MIN = 60;
-    private static final Integer MINUTES_PER_INTERVAL = 1;
 
-    // Volatile variables accessed by RPI and TEK Generator
-    volatile static byte[] TEK;
-    volatile static byte[] TEK1;
-    volatile static byte[] RPIKey;
-    volatile static byte[] rollingProximityID;
-    //volatile static long ENIntervalNumber;
-    static volatile Cipher cipher;
-    volatile static SecretKeySpec aesKey;
-
+    private AppExecutors executors;
     static SecureRandom secureRandom;
 
-    /*
-      This beacon layout is for the Exposure Notification service Bluetooth Spec
-      That layout string above is what tells the library how to understand this new beacon type.
-      The layout “s:0-1=fd6f,p:-:-59,i:2-17,d:18-21” means that the advertisement is a gatt service type (“s:”) with a 16-bit service UUID of 0xfd6f (“0-1=fd6f”)
-      and it has a single 16-byte identifier in byte positions 2-17 of the advertisement (“i:2-17”)
-      The “p:-:-59” indicates that there is no unencrypted measured power calibration reference transmitted with this beacon,
-      and the library should default to using a 1-meter reference of -59 dBm for its built-in distance estimates.
-    */
-    private static final String BEACON_LAYOUT = "s:0-1=fd6f,p:-:-59,i:2-17";
-
-    ScheduledExecutorService scheduleTaskExecutor = Executors.newScheduledThreadPool(5);
-
+    RPIRepository rpiRepo;
     BeaconManager beaconManager;
-
-    public RPIRepository rpiRepo;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        rpiRepo = new RPIRepository(getApplicationContext());
-        beaconManager = BeaconManager.getInstanceForApplication(this);
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BEACON_LAYOUT));
-        beaconManager.bind(this);
-    }
 
     static {
         try {
@@ -106,19 +78,50 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         }
     }
 
-    public static long getENIntervalNumber(long secsSinceEpoch) {
-        return secsSinceEpoch / (SECS_PER_MIN * MINUTES_PER_INTERVAL);
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        executors = AppExecutors.getInstance();
+        rpiRepo = new RPIRepository(getApplicationContext());
+        // TODO Bind beacon manager after binding Service?
+        beaconManager = BeaconManager.getInstanceForApplication(this);
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BEACON_LAYOUT));
+        beaconManager.bind(this);
     }
 
-    public static <Beacon> Beacon getLastElement(final Iterable<Beacon> elements) {
-        Beacon lastElement = null;
+    @SuppressLint({"GetInstance", "WakelockTimeout"})
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
 
-        for (Beacon element : elements) {
-            lastElement = element;
-        }
+        String input = "Do not force stop this";
 
-        return lastElement;
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "ExposureService::ExposureNotificationService");
+        wakeLock.acquire();
+
+        List<Observer> rpiObservers = new ArrayList<>();
+        rpiObservers.add(new BLEAdvertiser(getApplicationContext(), GAENConstants.ADVERTISING_INTERVAL));
+
+        executors.scheduleIO().scheduleAtFixedRate(
+                new RPIGenerator(secureRandom, getApplicationContext(), rpiObservers), 0, RPI_INTERVAL, RPI_TIME_UNIT);
+
+        Intent notificationIntent = new Intent(this, SplashActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, 0);
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Exposure Notification Service")
+                .setContentText(input)
+                .setSmallIcon(R.drawable.ic_android)
+                .setContentIntent(pendingIntent)
+                .build();
+
+
+        startForeground(1, notification);
+        return START_STICKY;
     }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -126,11 +129,12 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
 
         beaconManager.addRangeNotifier((Collection<Beacon> beacons, Region region) -> {
             if (beacons.size() != 0) {
-                Beacon beacon = getLastElement(beacons);
+                Beacon beacon = Utils.getLastElement(beacons);
                 ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
                 rpiRepo.storeReceivedRPI(beacon.getId1().toString(), time.toEpochSecond());
-                Log.d(LOG_TAG, "didRangeBeaconsInRegion: UUID: " + beacon.getId1().toString()
-                        + "\nTime: " + time.toString()
+                Log.d(LOG_TAG, "didRangeBeaconsInRegion: "
+                        + "\nUUID: " + beacon.getId1()
+                        + "\nTIME: " + time.toString()
                         + "\nRSSI: " + beacon.getRssi()
                         + "\nTX: " + beacon.getTxPower()
                         + "\nDISTANCE: " + beacon.getDistance());
@@ -145,126 +149,15 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
         }
     }
 
-    @SuppressLint({"GetInstance", "WakelockTimeout"})
+    @Nullable
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        String input = "Do not force stop this";
-
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "ExposureService::ExposureNotificationService");
-        wakeLock.acquire();
-
-        scheduleTaskExecutor.scheduleAtFixedRate(new TEKGenerator(getApplicationContext()), 0, 5, TimeUnit.MINUTES);
-        scheduleTaskExecutor.scheduleAtFixedRate(new RPIGenerator(), 0, 1, TimeUnit.MINUTES);
-
-        Intent notificationIntent = new Intent(this, SplashActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Exposure Notification Service")
-                .setContentText(input)
-                .setSmallIcon(R.drawable.ic_android)
-                .setContentIntent(pendingIntent)
-                .build();
-
-        startForeground(1, notification);
-        return START_STICKY;
-    }
-
-    private static class TEKGenerator implements Runnable {
-
-        private TEKRepository tekRepo;
-
-        public TEKGenerator(Context context) {
-            this.tekRepo = new TEKRepository(context);
-        }
-
-        @SuppressLint("SecureRandom")
-        @Override
-        public void run() {
-            byte[] info = "EN-RPIK".getBytes();
-            //TEK1 = new byte[]{-42, -103, -22, -10, 69, -70, 95, -67, 71, 2, 125, -3, -86, 68, -30, -59};
-            TEK = secureRandom.generateSeed(16);
-            ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
-            Long enIntervalNumber = getENIntervalNumber(time.toEpochSecond());
-            String encodedTek = Base64.encodeToString(TEK, Base64.DEFAULT);
-            tekRepo.storeTEKWithEnIntervalNumber(encodedTek, enIntervalNumber);
-            Log.d(LOG_TAG + ":TEKGENERATOR",
-                    "Payload Tek Generated: enIntervalNumber: " + enIntervalNumber + " TEK: "+  Arrays.toString(TEK));
-
-            RPIKey = HKDF.fromHmacSha256().expand(TEK, info, 16);
-            Log.d("TEK", Arrays.toString(TEK));
-            Log.d("RPIKey", Arrays.toString(RPIKey));
-            aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
-        }
-
-    }
-
-    private class RPIGenerator implements Runnable {
-
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        public void run() {
-            try {
-
-                byte[] paddedData = new byte[16];
-
-                System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
-                ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
-                Long enIntervalNumber = getENIntervalNumber(time.toEpochSecond());
-                paddedData[12] = (byte) (enIntervalNumber & 0xFF);
-                paddedData[13] = (byte) (enIntervalNumber >> 8 % 0xFF);
-                paddedData[14] = (byte) (enIntervalNumber >> 16 % 0xFF);
-                paddedData[15] = (byte) (enIntervalNumber >> 24 % 0xFF);
-                cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-                rollingProximityID = cipher.doFinal(paddedData);
-                Log.d(LOG_TAG + ":RPIGENERATOR", "Payload ENIntervalNumber: " + enIntervalNumber + " TEK: " + Arrays.toString(TEK) + " RPI: " + Arrays.toString(rollingProximityID));
-                Log.d(LOG_TAG + ":RPIGENERATOR", "RPIString: " + Identifier.fromBytes(rollingProximityID, 0, 16, false).toString());
-                BeaconParser beaconParser = new BeaconParser().setBeaconLayout(BEACON_LAYOUT);
-
-                Beacon beacon = new Beacon.Builder()
-                        .setId1(Identifier.fromBytes(rollingProximityID, 0, 16, false).toString())
-                        .build();
-                BeaconTransmitter beaconTransmitter = new
-                        BeaconTransmitter(getApplicationContext(), beaconParser);
-                beaconTransmitter.startAdvertising(beacon, new AdvertiseCallback() {
-                    @Override
-                    public void onStartFailure(int errorCode) {
-                        super.onStartFailure(errorCode);
-                        Log.e(LOG_TAG, "Advertisement Failed because of error code: " + errorCode);
-                    }
-                });
-
-
-            } catch (BadPaddingException | IllegalBlockSizeException | NullPointerException | ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
-                Log.d("RPI", "Issue");
-                e.printStackTrace();
-            } catch (InvalidKeyException key) {
-                Log.d("AESKey", "Started generation");
-            }
-
-        }
-    }
-
-    @SuppressLint("GetInstance")
-    public ExposureKeyService() {
-        try {
-            cipher = Cipher.getInstance("AES/ECB/NoPadding");
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-            e.printStackTrace();
-        }
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+        beaconManager.unbind(this);
     }
 }

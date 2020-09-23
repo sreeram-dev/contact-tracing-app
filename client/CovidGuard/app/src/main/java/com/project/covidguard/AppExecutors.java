@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Ref: https://jswizzy.gitbooks.io/modern-android/content/app-architecture/appexecutors.html
@@ -23,26 +24,36 @@ public class AppExecutors {
     // For Singleton instantiation
     private static final String LOG_TAG = AppExecutors.class.getSimpleName();
     private static final Object LOCK = new Object();
+
+    private static final Integer NUM_NETWORK_THREADS = 4;
+
     private static AppExecutors sInstance;
     private final ExecutorService diskIO;
+    private final ScheduledExecutorService scheduledExecutors;
     private final Executor mainThread;
     private final ExecutorService networkIO;
 
-    private AppExecutors(ExecutorService diskIO, ExecutorService networkIO, Executor mainThread) {
+    private AppExecutors(ExecutorService diskIO, ExecutorService networkIO,
+                         ScheduledExecutorService scheduledExecutors,
+                         Executor mainThread) {
         this.diskIO = diskIO;
         this.networkIO = networkIO;
         this.mainThread = mainThread;
+        this.scheduledExecutors = scheduledExecutors;
     }
 
+    // Singleton class
     public static AppExecutors getInstance() {
         if (sInstance == null) {
             synchronized (LOCK) {
                 Log.d(LOG_TAG, "Creating the disk, network and main threads");
                 sInstance = new AppExecutors(Executors.newSingleThreadExecutor(),
-                        Executors.newFixedThreadPool(3),
+                        Executors.newFixedThreadPool(NUM_NETWORK_THREADS),
+                        Executors.newSingleThreadScheduledExecutor(),
                         new MainThreadExecutor());
             }
         }
+
         return sInstance;
     }
 
@@ -58,10 +69,15 @@ public class AppExecutors {
         return networkIO;
     }
 
+    public ScheduledExecutorService scheduleIO() {
+        return scheduledExecutors;
+    }
+
     public void shutdownServices() {
         Log.d(LOG_TAG, "Shutting down executors - network, disk");
         diskIO.shutdown();
         networkIO.shutdown();
+        scheduledExecutors.shutdown();
     }
 
     /**
