@@ -90,7 +90,6 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.8.1'
     testImplementation "androidx.room:room-testing:$room_version"
 
-
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
