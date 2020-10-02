@@ -1,6 +1,8 @@
 package com.project.covidguard.web.responses;
 
+
 public class RegisterUUIDResponse {
+
     public Boolean success;
     public String token;
 

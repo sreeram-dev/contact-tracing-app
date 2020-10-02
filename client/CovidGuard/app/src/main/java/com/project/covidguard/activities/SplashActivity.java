@@ -26,13 +26,17 @@ import androidx.lifecycle.Observer;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
-import com.project.covidguard.AppExecutors;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.TEKRepository;
+import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.RegisterUUIDResponse;
+import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
-import com.project.covidguard.web.services.VerificationServiceImpl;
+
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 
 import org.altbeacon.beacon.BeaconManager;
 
@@ -41,6 +45,11 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class SplashActivity extends AppCompatActivity {
@@ -151,7 +160,7 @@ public class SplashActivity extends AppCompatActivity {
             }
         } catch (RuntimeException e) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Bluetooth LE not available");
+            builder.setTitle("Bluetooth LE  not available");
             builder.setMessage("Sorry, this device does not support Bluetooth LE.");
             builder.setPositiveButton(android.R.string.ok, null);
             builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -199,14 +208,10 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
-    private void generateAndStoreToken(String uuid) {
+
+    private void storeUUIDAndToken(String uuid, String token) {
         try {
-
-            VerificationService verificationService = new VerificationServiceImpl(getApplicationContext());
-
-            String token = verificationService.registerUUIDAndGetToken(uuid);
             SharedPreferences sharedPref = getEncryptedSharedPref(getString(R.string.preference_file_key));
-
             SharedPreferences.Editor editor = sharedPref.edit();
             // token and uuid are related.
             editor.putString("token", token);
@@ -214,17 +219,45 @@ public class SplashActivity extends AppCompatActivity {
             editor.commit();
             Log.d(LOG_TAG, "App has been registered with uuid: " + uuid);
             Toast.makeText(this, "App Registration Succeeded", Toast.LENGTH_LONG).show();
-
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            Log.d(LOG_TAG, "App registration failed with uuid: " + uuid);
-            Toast.makeText(this, "App Registration Failed", Toast.LENGTH_LONG).show();
-
-        } catch (GeneralSecurityException exception) {
+        } catch (GeneralSecurityException | IOException exception) {
             exception.printStackTrace();
             Log.d(LOG_TAG, "MasterKey Creation for encrypted shared preferences failed " + uuid);
             Toast.makeText(this, "Shared Preferences Security Registration Failed", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void generateAndStoreToken(String uuid) {
+        VerificationEndpointInterface verificationService = VerificationService.getService();
+        Call<RegisterUUIDResponse> response = verificationService.registerUUID(uuid);
+        response.enqueue(new Callback<RegisterUUIDResponse>() {
+            @Override
+            public void onResponse(Call<RegisterUUIDResponse> call, Response<RegisterUUIDResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterUUIDResponse res = response.body();
+                    String token = res.getToken();
+                    storeUUIDAndToken(uuid, token);
+                    Toast.makeText(getApplicationContext(), "App Registration Succeeded", Toast.LENGTH_LONG).show();
+                } else {
+                    ResponseBody res = response.errorBody();
+                    Moshi moshi = new Moshi.Builder().build();
+                    JsonAdapter<ErrorResponse> errorResponseJsonAdapter = moshi.adapter(ErrorResponse.class);
+                    try {
+                        ErrorResponse err = errorResponseJsonAdapter.fromJson(res.source());
+                        Log.d(LOG_TAG, "App Registration failed with error code: " + err.toString());
+                        Log.d(LOG_TAG, "Request URL: " + call.request().url());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        Toast.makeText(getApplicationContext(), "App Registration Failed", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterUUIDResponse> call, Throwable e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public boolean isNetworkAvailable() {
@@ -320,12 +353,11 @@ public class SplashActivity extends AppCompatActivity {
         String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
 
         SharedPreferences sharedPref = EncryptedSharedPreferences.create(
-                getString(R.string.preference_file_key),
+                file,
                 masterKeyAlias,
                 getApplicationContext(),
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
-
 
         return sharedPref;
     }

@@ -1,0 +1,6 @@
+#!/usr/bin/zsh
+# This hook is sourced after this virtualenv is activated.
+PROJECT_PATH=$HOME/projects/CovidGuard-F/lis-server/server
+cd $PROJECT_PATH
+export PYTHON_PATH=$PYTHONPATH:$PROJECT_PATH
+export CLOUDSDK_CORE_PROJECT=lis-server-289906
