@@ -32,6 +32,8 @@ public interface  TEKDao {
     @Query("SELECT * FROM teks where created_at >= :timestamp")
     LiveData<List<TEK>> getTEKFromTimeStamp(Long timestamp);
 
+    @Query("SELECT * FROM teks")
+    LiveData<List<TEK>> getAllTEKs();
     /**
      * Get the last TEK stored in the database
      * @return TEK - the last tek by created_at

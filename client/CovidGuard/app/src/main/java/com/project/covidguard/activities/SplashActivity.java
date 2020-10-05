@@ -1,6 +1,8 @@
+
 package com.project.covidguard.activities;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +13,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.LinkMovementMethod;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -34,18 +37,28 @@ import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
-
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 
 import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
+import at.favre.lib.crypto.HKDF;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,6 +70,11 @@ public class SplashActivity extends AppCompatActivity {
     private static final int PERMISSION_REPEAT_REQUEST = 2;
 
     private static final String LOG_TAG = SplashActivity.class.getName();
+    long ENIntervalNumber;
+    byte[] RPIKey;
+    SecretKeySpec aesKey;
+    Cipher cipher;
+    byte[] info = "EN-RPIK".getBytes();
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -360,5 +378,56 @@ public class SplashActivity extends AppCompatActivity {
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
 
         return sharedPref;
+    }
+
+    public void clickMatchMaker(View view) {
+        TEKRepository repo = new TEKRepository(getApplicationContext());
+        LiveData<List<TEK>> teks = repo.getAllTEKs();
+        teks.observe(this, new Observer<List<TEK>>() {
+            @SuppressLint("GetInstance")
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onChanged(List<TEK> teks) {
+                for (TEK tek : teks) {
+                    //initialise GAEN variables based on fetched TEK and ENIN
+
+                    byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
+                    byte[] paddedData = new byte[16];
+
+                    System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
+
+                    ENIntervalNumber = tek.getEnIntervalNumber();
+                    long ENIntervalNumberLimit = ENIntervalNumber + 5;
+                    RPIKey = HKDF.fromHmacSha256().expand(TEKByteArray, info, 16);
+                    aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
+
+                    try {
+                        cipher = Cipher.getInstance("AES/ECB/NoPadding");
+                        cipher.init(Cipher.ENCRYPT_MODE, aesKey);
+                    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+                        e.printStackTrace();
+                    }
+
+                    //Start regeneration of RPIs
+                    for (long currentENIN = ENIntervalNumber; currentENIN < ENIntervalNumberLimit; currentENIN++) {
+
+                        paddedData[12] = (byte) (currentENIN & 0xFF);
+                        paddedData[13] = (byte) (currentENIN >> 8 % 0xFF);
+                        paddedData[14] = (byte) (currentENIN >> 16 % 0xFF);
+                        paddedData[15] = (byte) (currentENIN >> 24 % 0xFF);
+
+                        byte[] rollingProximityID = new byte[0];
+                        try {
+                            rollingProximityID = cipher.doFinal(paddedData);
+                        } catch (BadPaddingException | IllegalBlockSizeException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d(LOG_TAG, "TEK: " + Arrays.toString(TEKByteArray)
+                                + " ENIN: " + currentENIN
+                                + " RPI: " + Arrays.toString(rollingProximityID));
+                    }
+                }
+            }
+        });
     }
 }

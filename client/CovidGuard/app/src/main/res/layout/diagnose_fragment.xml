@@ -64,16 +64,29 @@
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
-        android:padding="5dp"
-        android:layout_gravity="center"
-        android:gravity="center"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
         android:layout_above="@+id/button2"
-        android:layout_marginBottom="20dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="64dp"
+        android:gravity="center"
+        android:padding="5dp"
         android:text="@string/health_status_disclaimer"
         android:textAlignment="center" />
-
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#F44336"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="30dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginBottom="70dp"
+        android:text="@string/check"
+        android:onClick="clickMatchMaker"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        />
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button2"
         android:layout_width="match_parent"

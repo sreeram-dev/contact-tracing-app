@@ -1,20 +1,19 @@
 package com.project.covidguard.data.repositories;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
+import android.os.AsyncTask;
 import android.util.Log;
+
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import com.project.covidguard.AppExecutors;
 import com.project.covidguard.data.AppDatabase;
 import com.project.covidguard.data.dao.TEKDao;
 import com.project.covidguard.data.entities.TEK;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.threeten.bp.LocalDateTime;
@@ -42,6 +41,7 @@ public class TEKRepository {
         mTekDao = db.tekDao();
     }
 
+
     /**
      * Get the liveData of all the TEKs
      * @return
@@ -53,7 +53,7 @@ public class TEKRepository {
 
             try {
                 Future<LiveData<List<TEK>>> future = executors.diskIO().submit(
-                    () -> mTekDao.getTEKFromTimeStamp(timestamp));
+                        () -> mTekDao.getTEKFromTimeStamp(timestamp));
                 mTeks = future.get();
             } catch (InterruptedException ex) {
                 ex.printStackTrace();

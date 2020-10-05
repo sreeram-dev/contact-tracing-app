@@ -18,5 +18,6 @@
     <string name="encryption_master_key_alias"> com.project.covidguard.MASTER_AES_SHARED_PREF</string>
     <string name="splash_text">Checking for permissions and registration</string>
     <string name="dont_allow">Don\'t Allow</string>
+    <string name="check">Check for postive contact</string>
 
 </resources>
