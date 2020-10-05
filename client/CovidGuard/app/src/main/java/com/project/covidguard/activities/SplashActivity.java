@@ -43,6 +43,7 @@ import com.squareup.moshi.Moshi;
 import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
@@ -383,6 +384,7 @@ public class SplashActivity extends AppCompatActivity {
     public void clickMatchMaker(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         LiveData<List<TEK>> teks = repo.getAllTEKs();
+        ArrayList<byte[]> RPIList = new ArrayList<>();
         teks.observe(this, new Observer<List<TEK>>() {
             @SuppressLint("GetInstance")
             @RequiresApi(api = Build.VERSION_CODES.O)
@@ -425,6 +427,7 @@ public class SplashActivity extends AppCompatActivity {
                         Log.d(LOG_TAG, "TEK: " + Arrays.toString(TEKByteArray)
                                 + " ENIN: " + currentENIN
                                 + " RPI: " + Arrays.toString(rollingProximityID));
+                        RPIList.add(rollingProximityID);
                     }
                 }
             }
