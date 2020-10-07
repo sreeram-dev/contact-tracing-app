@@ -33,6 +33,7 @@ import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.TEKRepository;
+import com.project.covidguard.gaen.Utils;
 import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
@@ -394,41 +395,9 @@ public class SplashActivity extends AppCompatActivity {
                     //initialise GAEN variables based on fetched TEK and ENIN
 
                     byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-                    byte[] paddedData = new byte[16];
-
-                    System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
-
                     ENIntervalNumber = tek.getEnIntervalNumber();
-                    long ENIntervalNumberLimit = ENIntervalNumber + 5;
-                    RPIKey = HKDF.fromHmacSha256().expand(TEKByteArray, info, 16);
-                    aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
+                    Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray,ENIntervalNumber);
 
-                    try {
-                        cipher = Cipher.getInstance("AES/ECB/NoPadding");
-                        cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-                    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
-                        e.printStackTrace();
-                    }
-
-                    //Start regeneration of RPIs
-                    for (long currentENIN = ENIntervalNumber; currentENIN < ENIntervalNumberLimit; currentENIN++) {
-
-                        paddedData[12] = (byte) (currentENIN & 0xFF);
-                        paddedData[13] = (byte) (currentENIN >> 8 % 0xFF);
-                        paddedData[14] = (byte) (currentENIN >> 16 % 0xFF);
-                        paddedData[15] = (byte) (currentENIN >> 24 % 0xFF);
-
-                        byte[] rollingProximityID = new byte[0];
-                        try {
-                            rollingProximityID = cipher.doFinal(paddedData);
-                        } catch (BadPaddingException | IllegalBlockSizeException e) {
-                            e.printStackTrace();
-                        }
-                        Log.d(LOG_TAG, "TEK: " + Arrays.toString(TEKByteArray)
-                                + " ENIN: " + currentENIN
-                                + " RPI: " + Arrays.toString(rollingProximityID));
-                        RPIList.add(rollingProximityID);
-                    }
                 }
             }
         });
