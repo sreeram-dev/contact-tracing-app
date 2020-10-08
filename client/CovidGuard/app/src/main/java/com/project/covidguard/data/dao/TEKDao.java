@@ -44,6 +44,8 @@ public interface  TEKDao {
     @Query("SELECT * FROM teks ORDER BY created_at DESC LIMIT 1")
     TEK getLastTEK();
 
+
+
     /**
      * DELETE data from the database based on the timestamp
      */

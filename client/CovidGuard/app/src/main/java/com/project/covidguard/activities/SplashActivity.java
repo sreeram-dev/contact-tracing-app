@@ -30,7 +30,9 @@ import androidx.lifecycle.Observer;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
+import com.project.covidguard.data.entities.RPI;
 import com.project.covidguard.data.entities.TEK;
+import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
 import com.project.covidguard.web.responses.ErrorResponse;
@@ -43,6 +45,7 @@ import org.altbeacon.beacon.BeaconManager;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -345,5 +348,41 @@ public class SplashActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void clickDeveloperMetricsHandler(View view) {
+
+        setContentView(R.layout.metrics);
+    }
+
+    public void clickTEKMetric(View view) {
+
+        TEKRepository repo = new TEKRepository(getApplicationContext());
+        TEK currentTEK = repo.getLastTek();
+        byte[] currentTEKByteArray = Base64.decode(currentTEK.getTekId(), Base64.DEFAULT);
+        Toast.makeText(getApplicationContext(), Arrays.toString(currentTEKByteArray), Toast.LENGTH_SHORT).show();
+
+    }
+
+    public void clickRPIMetric(View view) {
+        RPIRepository repo = new RPIRepository(getApplicationContext());
+        LiveData<List<RPI>> rpis = repo.getLatestRPIs(1);
+        rpis.observe(this, rpis1 -> {
+            for (RPI rpi : rpis1) {
+                //initialise GAEN variables based on fetched TEK and ENIN
+                if (rpi.rpi == null)
+                    Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(getApplicationContext(), rpi.rpi, Toast.LENGTH_SHORT).show();
+
+
+            }
+        });
+
+    }
+
+    public void clickENINMetric(View view) {
+        Toast.makeText(getApplicationContext(), "current ENIN", Toast.LENGTH_SHORT).show();
+
     }
 }

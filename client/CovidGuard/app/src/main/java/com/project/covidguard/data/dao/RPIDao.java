@@ -7,6 +7,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.project.covidguard.data.entities.RPI;
+import com.project.covidguard.data.entities.TEK;
 
 import java.util.List;
 
@@ -18,5 +19,8 @@ public interface RPIDao {
 
     @Query("SELECT * FROM rpis where received_at >= :timestamp LIMIT :limit")
     LiveData<List<RPI>> getRPIFromTimestamp(Long timestamp, Integer limit);
+
 }
+
+
 

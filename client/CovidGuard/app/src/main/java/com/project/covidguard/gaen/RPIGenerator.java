@@ -67,10 +67,10 @@ public class RPIGenerator extends Observable implements Runnable {
             tekENIN = tek.getEnIntervalNumber();
         } else {
             TEK = null;
-            tekENIN = Long.valueOf(0);
+            tekENIN = 0L;
         }
 
-        if (TEK == null || TEK.length != 16 || tekENIN.equals(Long.valueOf(0))) {
+        if (TEK == null || TEK.length != 16 || tekENIN.equals(0L)) {
             String msg = "TEK cannot be null or not equal to 16 chars";
             Log.e(LOG_TAG, msg);
             throw new IllegalStateException(msg);

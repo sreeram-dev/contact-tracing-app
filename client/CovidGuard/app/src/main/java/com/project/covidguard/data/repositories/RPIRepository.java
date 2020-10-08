@@ -9,6 +9,7 @@ import com.project.covidguard.AppExecutors;
 import com.project.covidguard.data.AppDatabase;
 import com.project.covidguard.data.dao.RPIDao;
 import com.project.covidguard.data.entities.RPI;
+import com.project.covidguard.data.entities.TEK;
 
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.ZoneId;
@@ -40,7 +41,7 @@ public class RPIRepository {
      * @param limit - the number of latest rpi
      * @return
      */
-    LiveData<List<RPI>> getLatestRPIs(Integer limit) {
+    public LiveData<List<RPI>> getLatestRPIs(Integer limit) {
         if (mLatestRPIs == null) {
             try {
                 Future<LiveData<List<RPI>>> future = executors.diskIO().submit(() -> {
@@ -61,6 +62,7 @@ public class RPIRepository {
 
         return mLatestRPIs;
     }
+
 
     /**
      * Store the RPI and received timestamp

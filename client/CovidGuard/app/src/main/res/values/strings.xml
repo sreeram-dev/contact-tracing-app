@@ -19,5 +19,12 @@
     <string name="splash_text">Checking for permissions and registration</string>
     <string name="dont_allow">Don\'t Allow</string>
     <string name="check">Check for postive contact</string>
+    <string name="devmetricscreen">Launch Developer Metrics</string>
+    <string name="client_metrics">Button</string>
+    <string name="tek_metric">Current TEK</string>
+    <string name="rpi_metric">Current RPI</string>
+    <string name="enin_metric">Current ENIN</string>
+    <string name="server_metric">Server Metrics</string>
+    <string name="dev_screen_disclaimer">Here you can see the Temporary Exposure Key, Rolling Proximity Identifier and ENIntervalNumber</string>
 
 </resources>
