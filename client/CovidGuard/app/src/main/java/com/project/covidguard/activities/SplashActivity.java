@@ -41,16 +41,11 @@ import com.project.covidguard.web.services.VerificationService;
 import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
-
 import java.security.GeneralSecurityException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -345,8 +340,8 @@ public class SplashActivity extends AppCompatActivity {
                     //initialise GAEN variables based on fetched TEK and ENIN
 
                     byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-                    Long ENIntervalNumber = tek.getEnIntervalNumber();
-                    Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray,ENIntervalNumber);
+                    long ENIntervalNumber = tek.getEnIntervalNumber();
+                    Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber);
                 }
             }
         });
