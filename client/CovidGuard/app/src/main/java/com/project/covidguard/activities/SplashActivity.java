@@ -371,7 +371,7 @@ public class SplashActivity extends AppCompatActivity {
         if (rpi.rpi.isEmpty())
             Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
         else
-            Toast.makeText(getApplicationContext(), "Current anonymised RPI being transmitted is: " + rpi.rpi, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + rpi.rpi, Toast.LENGTH_SHORT).show();
 
 
     }
