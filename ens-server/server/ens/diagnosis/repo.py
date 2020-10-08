@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+from urllib.parse import urlencode
 from datetime import datetime, timedelta
 from typing import List
 
@@ -14,6 +15,7 @@ class DiagnosisKeyRepository(object):
         """Stores the infected user tek by token_id and en_interval_number
         """
         tek_info = TEKInfo()
+        tek_info.id = urlencode(dict(p=tek))
         tek_info.tek = tek
         tek_info.en_interval_number = en_interval_number
         tek_info.created_at = datetime.now()

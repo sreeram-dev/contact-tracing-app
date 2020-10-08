@@ -47,8 +47,6 @@ public class App extends Application {
 
         Log.d(LOG_TAG, "Initialize WorkManager");
         mWorkManager = WorkManager.getInstance(getApplicationContext());
-        WorkRequest request = SubmitTEKTask.getAssociatedWorkRequest();
-        mWorkManager.enqueue(request);
 
         // Add conscrypt if the android version is less than SDK Level 29
         // TLS 1.3 is by default in Android Version Q

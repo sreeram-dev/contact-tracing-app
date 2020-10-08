@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import json
+import traceback
+
 from flask import flash, request, url_for, redirect, render_template
 
 from flask import jsonify
 from flask.views import MethodView
+
+from ens.app import app
 from ens.diagnosis.services import DiagnosisKeyService
 
 
@@ -52,6 +57,7 @@ class UploadView(MethodView):
             return err_response
 
         json_data = request.get_json()
+        data_payload = json.dumps(json_data)
 
         data = self.diagnosis_service.call_verify_tan(
             json_data.get('tan', None))
@@ -71,7 +77,8 @@ class UploadView(MethodView):
             data = {
                 'code': 500,
                 'name': 'UploadService',
-                'description': 'Upload Failed: ' + str(e)
+                'description': 'Upload Failed: ' + str(e),
+                'traceback': traceback.format_exc()
             }
             return jsonify(data), 400
         return jsonify({'success': True, 'message': 'Upload Successful'}), 200

@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone, timedelta
 
+from covid.app import APP_MODE
 from covid.tan.repo import TANRepository
 from covid.tan.models import TANInfo
 from covid.tan.errors import TANValidationError
@@ -32,5 +33,6 @@ class TANService(object):
             raise TANValidationError(
                 'TAN has expired. tan: ' + tan_info.get_tan())
 
-        tan_info.is_verified = True
-        tan_info.update()
+        if APP_MODE != 'dev':
+            tan_info.is_verified = True
+            tan_info.update()

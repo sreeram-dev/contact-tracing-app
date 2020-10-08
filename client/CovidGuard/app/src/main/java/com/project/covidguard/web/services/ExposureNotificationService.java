@@ -13,7 +13,7 @@ public class ExposureNotificationService {
     public static DiagnosisServerInterface getService() {
         if (retrofit == null) {
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(new StethoInterceptor()).build();
+                    .addNetworkInterceptor(new StethoInterceptor()).build();
             Moshi moshi = new Moshi.Builder().build();
             retrofit = new Retrofit.Builder()
                     .client(client)

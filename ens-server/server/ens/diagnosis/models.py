@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from fireo.models import Model
-from fireo.fields import IDField, NumberField
+from fireo.fields import IDField, NumberField, TextField
 from fireo.fields import DateTime
 from ens.utils import get_collection_name
 
@@ -9,8 +9,11 @@ from ens.utils import get_collection_name
 class TEKInfo(Model):
     """TEKInfo
     """
-    tek = IDField()
-    en_interval_number = NumberField()
+    id = IDField(column_name='id', required=True)
+    tek = TextField(column_name='tek', required=True)
+    en_interval_number = NumberField(
+        column_name='en_interval_number',
+        required=True)
     created_at = DateTime(auto=True)
 
     class Meta:

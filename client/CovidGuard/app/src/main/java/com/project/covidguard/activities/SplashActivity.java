@@ -26,6 +26,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
@@ -35,6 +37,7 @@ import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
+import com.project.covidguard.tasks.SubmitTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
@@ -202,15 +205,8 @@ public class SplashActivity extends AppCompatActivity {
 
     public void clickSubmitHandler(View view) {
         Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
-        TEKRepository repo = new TEKRepository(getApplicationContext());
-        LiveData<List<TEK>> teks = repo.getAllTEKs();
-        teks.observe(this, new Observer<List<TEK>>() {
-            @Override
-            public void onChanged(List<TEK> teks) {
-                Log.d(LOG_TAG, "Recent TEKS from SQLITE: " + teks.size());
-            }
-        });
-
+        WorkRequest request = SubmitTEKTask.getOneTimeRequest();
+        WorkManager.getInstance(getApplicationContext()).enqueue(request);
     }
 
     private void storeUUIDAndToken(String uuid, String token) {

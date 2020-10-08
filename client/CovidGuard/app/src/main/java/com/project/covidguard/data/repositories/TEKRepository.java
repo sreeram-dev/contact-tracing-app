@@ -73,8 +73,8 @@ public class TEKRepository {
      * To be used in background threads
      * @return
      */
-    public List<TEK> getAllTEKSync(Long timestamp) {
-        return mTekDao.getTEKFromTimeStampSync(timestamp);
+    public List<TEK> getAllTEKSync(Long from, Long to) {
+        return mTekDao.getTEKFromTimeStampSync(from, to);
     }
 
     /**

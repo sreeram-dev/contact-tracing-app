@@ -4,14 +4,15 @@ import os
 import json
 import logging
 import logging.config
+import traceback
 
 from os.path import join
 
 from datetime import datetime, date
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
-from flask import Flask, session
-from flask import request, g
+from flask import Flask
+from flask import request, jsonify, g
 from flask.json import JSONEncoder
 from flask.logging import default_handler
 from werkzeug.exceptions import HTTPException
@@ -46,7 +47,8 @@ elif APP_MODE == 'prod':
 app.logger = logging.getLogger(app.config['LOGGER_NAME'])
 
 
-@app.teardown_request #log request and response info after extension's callbacks
+#log request and response info after extension's callbacks
+@app.teardown_request
 def log_request_time(_exception):
     if APP_MODE == 'prod':
         app.logger.info(
@@ -68,9 +70,19 @@ def handle_exception(e):
     return response
 
 
-#@app.errorhandler(Exception)
+@app.errorhandler(Exception)
 def handle_internal_server_error(e):
-    return "Response Failed", 500
+
+    data = {
+        'code': 500,
+        'name': e.__class__.__name__,
+        'message': str(e)
+    }
+
+    data.update({'traceback': traceback.format_exc()})
+
+    return jsonify(data), 500
+
 
 
 app.static_folder = join(SOURCE_DIR, 'static')
