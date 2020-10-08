@@ -2,7 +2,7 @@
 
 import uuid
 
-from covid.verification.repo import TokenRepository
+from covid.profile.repo import TokenRepository
 
 
 class RegistrationService(object):
@@ -25,10 +25,20 @@ class RegistrationService(object):
         if self.token_repo.find_by_uuid(uuid):
             raise ValueError('UUID already exists')
 
-
     def register_uuid(self, request):
         registration_uuid = request.form.get('uuid')
         token = uuid.uuid4().hex
         self.token_repo.insert(registration_uuid, token)
 
         return token
+
+
+class TokenService(object):
+    token_repo = TokenRepository()
+
+    def validate_token(self, token: str):
+        """
+        """
+        profile = self.token_repo.find_by_token(token)
+        if not profile:
+            raise ValueError('Token does not exist')

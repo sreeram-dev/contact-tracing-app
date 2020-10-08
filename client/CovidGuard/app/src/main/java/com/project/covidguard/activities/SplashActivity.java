@@ -26,11 +26,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
-import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKeys;
 
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
+import com.project.covidguard.StorageUtils;
 import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
@@ -38,30 +37,20 @@ import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
 
 import org.altbeacon.beacon.BeaconManager;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.charset.StandardCharsets;
+
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 
-import at.favre.lib.crypto.HKDF;
-import okhttp3.ResponseBody;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -72,11 +61,7 @@ public class SplashActivity extends AppCompatActivity {
     private static final int PERMISSION_REPEAT_REQUEST = 2;
 
     private static final String LOG_TAG = SplashActivity.class.getName();
-    long ENIntervalNumber;
-    byte[] RPIKey;
-    SecretKeySpec aesKey;
-    Cipher cipher;
-    byte[] info = "EN-RPIK".getBytes();
+
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -201,12 +186,14 @@ public class SplashActivity extends AppCompatActivity {
     public void clickRegistrationHandler(View view) {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
 
-        if (!isNetworkAvailable() && !isTokenPresent()) {
+        if (!isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
             Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
         }
 
-        if (isNetworkAvailable() && !isTokenPresent()) {
+        if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
             generateAndStoreToken(uuid);
+        } else {
+            Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
         }
 
         Intent serviceIntent = new Intent(this, ExposureKeyService.class);
@@ -228,10 +215,10 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
-
     private void storeUUIDAndToken(String uuid, String token) {
         try {
-            SharedPreferences sharedPref = getEncryptedSharedPref(getString(R.string.preference_file_key));
+            SharedPreferences sharedPref = StorageUtils.getEncryptedSharedPref(
+                    getApplicationContext(), (getString(R.string.preference_file_key)));
             SharedPreferences.Editor editor = sharedPref.edit();
             // token and uuid are related.
             editor.putString("token", token);
@@ -258,11 +245,9 @@ public class SplashActivity extends AppCompatActivity {
                     storeUUIDAndToken(uuid, token);
                     Toast.makeText(getApplicationContext(), "App Registration Succeeded", Toast.LENGTH_LONG).show();
                 } else {
-                    ResponseBody res = response.errorBody();
-                    Moshi moshi = new Moshi.Builder().build();
-                    JsonAdapter<ErrorResponse> errorResponseJsonAdapter = moshi.adapter(ErrorResponse.class);
+
                     try {
-                        ErrorResponse err = errorResponseJsonAdapter.fromJson(res.source());
+                        ErrorResponse err = ErrorResponse.buildFromSource(response.errorBody().source());
                         Log.d(LOG_TAG, "App Registration failed with error code: " + err.toString());
                         Log.d(LOG_TAG, "Request URL: " + call.request().url());
                     } catch (IOException e) {
@@ -297,28 +282,6 @@ public class SplashActivity extends AppCompatActivity {
     public void termsConditionsLink(View view) {
         TextView termsConditions = findViewById(R.id.textView7);
         termsConditions.setMovementMethod(LinkMovementMethod.getInstance());
-    }
-
-    public boolean isTokenPresent() {
-        SharedPreferences sharedPref = null;
-        try {
-            sharedPref = getEncryptedSharedPref(getString(R.string.preference_file_key));
-        } catch (Exception e) {
-            Log.d(LOG_TAG, "Encrypted shared preferences is not accesible");
-        }
-
-        if (sharedPref == null) {
-            Log.d(LOG_TAG, "Token could not be checked as the shared pref is not accessible");
-            return false;
-        }
-
-        // if one of the keys, token and uuid, are absent, generate a new pair
-        if (!sharedPref.contains("token") || !sharedPref.contains("uuid")) {
-            return false;
-        }
-
-        Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
-        return true;
     }
 
     private void showPermissionRationaleDialog(ArrayList<String> deniedPermissions) {
@@ -369,19 +332,6 @@ public class SplashActivity extends AppCompatActivity {
         builder.create().show();
     }
 
-    private SharedPreferences getEncryptedSharedPref(String file) throws GeneralSecurityException, IOException {
-        String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
-
-        SharedPreferences sharedPref = EncryptedSharedPreferences.create(
-                file,
-                masterKeyAlias,
-                getApplicationContext(),
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
-
-        return sharedPref;
-    }
-
     public void clickMatchMaker(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         LiveData<List<TEK>> teks = repo.getAllTEKs();
@@ -395,9 +345,8 @@ public class SplashActivity extends AppCompatActivity {
                     //initialise GAEN variables based on fetched TEK and ENIN
 
                     byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-                    ENIntervalNumber = tek.getEnIntervalNumber();
+                    Long ENIntervalNumber = tek.getEnIntervalNumber();
                     Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray,ENIntervalNumber);
-
                 }
             }
         });

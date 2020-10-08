@@ -6,8 +6,13 @@ import android.app.NotificationManager;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
+import androidx.work.Worker;
+
 import com.facebook.stetho.Stetho;
 import com.project.covidguard.data.AppDatabase;
+import com.project.covidguard.tasks.SubmitTEKTask;
 
 import org.conscrypt.Conscrypt;
 
@@ -23,6 +28,9 @@ public class App extends Application {
     // Executor Pool to execute network, thread and IO
     private AppExecutors mExecutors;
 
+    //WorkManager
+    private WorkManager mWorkManager;
+
     // Perform App DB
     private AppDatabase mDB;
 
@@ -36,6 +44,11 @@ public class App extends Application {
 
         Log.d(LOG_TAG, "Initialising SQLITE Database");
         mDB = AppDatabase.getDatabase(getApplicationContext());
+
+        Log.d(LOG_TAG, "Initialize WorkManager");
+        mWorkManager = WorkManager.getInstance(getApplicationContext());
+        WorkRequest request = SubmitTEKTask.getAssociatedWorkRequest();
+        mWorkManager.enqueue(request);
 
         // Add conscrypt if the android version is less than SDK Level 29
         // TLS 1.3 is by default in Android Version Q
@@ -81,5 +94,9 @@ public class App extends Application {
 
     public AppDatabase getDB() {
         return mDB;
+    }
+
+    public WorkManager getWorkManager() {
+        return mWorkManager;
     }
 }

@@ -31,7 +31,7 @@ public class BLEAdvertiser implements Observer {
 
     public BLEAdvertiser(Context context, Integer advertisingInterval) {
         if (advertisingInterval >= RPI_INTERVAL) {
-            Log.e(LOG_TAG, "Advertising Interval: " + advertisingInterval + " greater than RPI Interval: " + RPI_INTERVAL);
+            Log.w(LOG_TAG, "Advertising Interval: " + advertisingInterval + " greater than RPI Interval: " + RPI_INTERVAL);
             //throw new IllegalArgumentException("Advertising Interval cannot be greater than RPI Interval");
         }
 

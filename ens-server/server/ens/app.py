@@ -4,14 +4,15 @@ import os
 import json
 import logging
 import logging.config
-import werkzeug
 
 from os.path import join
-from datetime import datetime, timedelta
 
+from datetime import datetime, date
+from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
 from flask import Flask, session
-from flask import Flask, request, g
+from flask import request, g
+from flask.json import JSONEncoder
 from flask.logging import default_handler
 from werkzeug.exceptions import HTTPException
 
@@ -25,7 +26,8 @@ from flask_google_cloud_logger import FlaskGoogleCloudLogger
 
 logging.config.dictConfig(LogConfig.dictConfig)
 
-app = Flask('CovidGuard-F Diagnosis Key Server', template_folder=join(SOURCE_DIR, 'templates'))
+app = Flask('CovidGuard-F Diagnosis Key Server',
+            template_folder=join(SOURCE_DIR, 'templates'))
 app.logger.removeHandler(default_handler)
 
 APP_MODE = os.environ.get('APP_MODE', 'dev')
@@ -66,9 +68,24 @@ def handle_exception(e):
     return response
 
 
-@app.errorhandler(Exception)
+#@app.errorhandler(Exception)
 def handle_internal_server_error(e):
     return "Response Failed", 500
 
 
 app.static_folder = join(SOURCE_DIR, 'static')
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            if (isinstance(obj, date) or isinstance(obj, datetime)
+                    or isinstance(obj, DatetimeWithNanoseconds)):
+                return obj.isoformat()
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
+
+app.json_encoder = CustomJSONEncoder

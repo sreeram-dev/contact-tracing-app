@@ -1,7 +1,11 @@
 from ens.app import app
 
-from ens.base.views import IndexView, WarmupView
+from ens.server_views import IndexView, WarmupView
+
+from ens.diagnosis.views import UploadView
 
 
 app.add_url_rule('/', view_func=IndexView.as_view('index'))
+app.add_url_rule('/upload-diagnosis-keys',
+                 view_func=UploadView.as_view('upload_view'))
 app.add_url_rule('/_ah/warmup', view_func=WarmupView.as_view('warmup'))

@@ -6,25 +6,7 @@ from flask import jsonify
 from flask.views import MethodView
 
 from covid.app import app
-from covid.verification.services import RegistrationService
-
-
-class IndexView(MethodView):
-
-    def get(self):
-        return jsonify({
-            'success': True,
-            'message': 'Welcome to covidguard API'
-        }), 200
-
-
-class WarmupView(MethodView):
-
-    def get(self):
-        return jsonify({
-            'success': True,
-            'message': 'Warmup Request'
-        }), 200
+from covid.profile.services import RegistrationService
 
 
 class RegistrationView(MethodView):

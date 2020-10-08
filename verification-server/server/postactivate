@@ -2,6 +2,6 @@
 # This hook is sourced after this virtualenv is activated.
 
 cd $HOME/projects/CovidGuard-F/verification-server/server
-export PYTHON_PATH=$HOME/projects/CovidGuard-F/verification-server/server:$PYTHONPATH
+export PYTHONPATH=$HOME/projects/CovidGuard-F/verification-server/server:$PYTHONPATH
 
 export CLOUDSDK_CORE_PROJECT=covidgaurd-285412

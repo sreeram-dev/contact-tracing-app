@@ -32,6 +32,9 @@ public interface  TEKDao {
     @Query("SELECT * FROM teks where created_at >= :timestamp")
     LiveData<List<TEK>> getTEKFromTimeStamp(Long timestamp);
 
+    @Query("SELECT * FROM teks where created_at >= :timestamp")
+    List<TEK> getTEKFromTimeStampSync(Long timestamp);
+
     @Query("SELECT * FROM teks")
     LiveData<List<TEK>> getAllTEKs();
     /**

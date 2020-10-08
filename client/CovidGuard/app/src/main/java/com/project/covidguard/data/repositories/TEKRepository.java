@@ -47,7 +47,6 @@ public class TEKRepository {
      * @return
      */
     public LiveData<List<TEK>> getAllTEKs() {
-        // TODO: Time to use RxJava - https://github.com/ReactiveX/RxJava
         if (mTeks == null) {
             Long timestamp = LocalDateTime.now().minusDays(30).atZone(zoneId).toEpochSecond();
 
@@ -68,6 +67,14 @@ public class TEKRepository {
         }
 
         return mTeks;
+    }
+
+    /**
+     * To be used in background threads
+     * @return
+     */
+    public List<TEK> getAllTEKSync(Long timestamp) {
+        return mTekDao.getTEKFromTimeStampSync(timestamp);
     }
 
     /**

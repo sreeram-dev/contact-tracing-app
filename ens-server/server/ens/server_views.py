@@ -10,7 +10,7 @@ class IndexView(MethodView):
     def get(self):
         return jsonify({
             'success': True,
-            'message': 'Welcome to covidguard API'
+            'message': 'Welcome to covidguard Diagnosis Key Server'
         }), 200
 
 
