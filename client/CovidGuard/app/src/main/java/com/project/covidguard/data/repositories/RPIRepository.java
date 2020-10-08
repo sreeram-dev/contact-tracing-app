@@ -63,6 +63,23 @@ public class RPIRepository {
         return mLatestRPIs;
     }
 
+    public RPI getLastRPI() {
+        Future<RPI> future = executors.diskIO().submit(() -> mRPIDao.getLastRPI());
+
+        try {
+            RPI lastRPI = future.get();
+            return lastRPI;
+        } catch(InterruptedException ex) {
+            ex.printStackTrace();
+            Log.e(LOG_TAG, "Last Tek Fetch Failed - Interrupted Exception");
+        } catch(ExecutionException ex) {
+            ex.printStackTrace();
+            Log.e(LOG_TAG, "Last Tek Fetch Failed - Execution Exception");
+        }
+
+        return null;
+    }
+
 
     /**
      * Store the RPI and received timestamp

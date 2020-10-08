@@ -21,9 +21,9 @@
     <string name="check">Check for postive contact</string>
     <string name="devmetricscreen">Launch Developer Metrics</string>
     <string name="client_metrics">Button</string>
-    <string name="tek_metric">Current TEK</string>
-    <string name="rpi_metric">Current RPI</string>
-    <string name="enin_metric">Current ENIN</string>
+    <string name="tek_metric">Current Temporary Exposure Key</string>
+    <string name="rpi_metric">Current Rolling Proximity Identifier</string>
+    <string name="enin_metric">Current ENIntervalNumber</string>
     <string name="server_metric">Server Metrics</string>
     <string name="dev_screen_disclaimer">Here you can see the Temporary Exposure Key, Rolling Proximity Identifier and ENIntervalNumber</string>
 

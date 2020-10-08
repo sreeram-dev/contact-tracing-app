@@ -8,6 +8,8 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import androidx.room.Update;
+
+import com.project.covidguard.data.entities.RPI;
 import com.project.covidguard.data.entities.TEK;
 
 import java.util.List;
@@ -43,8 +45,8 @@ public interface  TEKDao {
     @Query("SELECT * FROM teks ORDER BY created_at DESC LIMIT 1")
     TEK getLastTEK();
 
-    @Query("SELECT * FROM teks ORDER BY created_at DESC LIMIT 1")
-    TEK getLastENIN();
+
+
 
 
 

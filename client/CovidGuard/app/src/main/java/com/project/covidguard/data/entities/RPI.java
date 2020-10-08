@@ -69,4 +69,6 @@ public class RPI {
     public void setReceivedAt(Long receivedAt) {
         this.receivedAt = receivedAt;
     }
+
+
 }
