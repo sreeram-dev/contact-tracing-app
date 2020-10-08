@@ -360,7 +360,7 @@ public class SplashActivity extends AppCompatActivity {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentTEK = repo.getLastTek();
         byte[] currentTEKByteArray = Base64.decode(currentTEK.getTekId(), Base64.DEFAULT);
-        Toast.makeText(getApplicationContext(), Arrays.toString(currentTEKByteArray), Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Current RPIs are derived from the TEK: " + Arrays.toString(currentTEKByteArray), Toast.LENGTH_SHORT).show();
 
     }
 
@@ -370,10 +370,10 @@ public class SplashActivity extends AppCompatActivity {
         rpis.observe(this, rpis1 -> {
             for (RPI rpi : rpis1) {
                 //initialise GAEN variables based on fetched TEK and ENIN
-                if (rpi.rpi == null)
+                if (rpi.rpi.isEmpty())
                     Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
                 else
-                    Toast.makeText(getApplicationContext(), rpi.rpi, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Current anonymised RPI being transmitted is: " + rpi.rpi, Toast.LENGTH_SHORT).show();
 
 
             }
@@ -382,7 +382,10 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     public void clickENINMetric(View view) {
-        Toast.makeText(getApplicationContext(), "current ENIN", Toast.LENGTH_SHORT).show();
+        TEKRepository repo = new TEKRepository(getApplicationContext());
+        TEK currentENIN = repo.getLastTek();
+
+        Toast.makeText(getApplicationContext(),"Current TEK is derived from the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
 
     }
 }
