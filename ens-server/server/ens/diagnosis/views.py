@@ -82,3 +82,13 @@ class UploadView(MethodView):
             }
             return jsonify(data), 400
         return jsonify({'success': True, 'message': 'Upload Successful'}), 200
+
+
+class DownloadView(MethodView):
+    diagnosis_service = DiagnosisKeyService()
+
+    def get(self):
+        """
+        """
+        teks = self.diagnosis_service.download_teks()
+        return jsonify({'teks': teks}), 200

@@ -1,12 +1,14 @@
 # -*- coding:utf-8 -*-
 
-
 import requests
 
+from datetime import datetime, timedelta
 from typing import List
 
 from ens.diagnosis.repo import DiagnosisKeyRepository
 from ens.diagnosis.constants import VERIFY_TAN_URI
+from ens.providers.db import get_firestore_client
+from ens.utils import get_collection_name
 
 
 class DiagnosisKeyService(object):
@@ -28,3 +30,18 @@ class DiagnosisKeyService(object):
         """
         for tek in teks:
             self.diag_repo.insert_tek(tek['tek'], tek['en_interval_number'])
+
+    def download_teks(self) -> List[dict]:
+        """Download the teks
+        """
+        client = get_firestore_client()
+        timestamp = datetime.now() - timedelta(days=14)
+        query = client.collection(get_collection_name('tek_info')).where(
+            'created_at', '>=', timestamp).select(
+                ['tek', 'en_interval_number'])
+
+        teks = list()
+        for doc in query.stream():
+            tek_info = doc.to_dict()
+            teks.append(tek_info)
+        return teks
