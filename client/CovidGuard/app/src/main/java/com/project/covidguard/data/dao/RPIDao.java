@@ -17,10 +17,11 @@ public interface RPIDao {
     @Insert
     void insert(RPI rpi);
 
-    @Query("SELECT * FROM rpis where received_at >= :timestamp LIMIT :limit")
-    LiveData<List<RPI>> getRPIFromTimestamp(Long timestamp, Integer limit);
+    @Query("SELECT * FROM rpis where received_at >= :timestamp")
+    LiveData<List<RPI>> getRPIFromTimestamp(Long timestamp);
     @Query("SELECT * FROM rpis ORDER BY received_at DESC LIMIT 1")
     RPI getLastRPI();
+
 }
 
 

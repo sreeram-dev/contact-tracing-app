@@ -5,6 +5,7 @@ import android.util.Log;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -88,7 +89,7 @@ public class Utils {
         return null;
     }
 
-    public static void generateAllRPIsForTEKAndEnIntervalNumber(byte[] TEK, Long ENIN) {
+    public static void generateAllRPIsForTEKAndEnIntervalNumber(byte[] TEK, Long ENIN,  ArrayList<byte[]> rpiArrayList) {
         byte[] RPIKey = getRPIKeyFromTEK(TEK);
         SecretKeySpec aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
         Cipher cipher;
@@ -104,6 +105,7 @@ public class Utils {
         }
 
         byte[] paddedData = new byte[16];
+        byte[] rollingProximityID = new byte[0];
         System.arraycopy("EN-RPI".getBytes(StandardCharsets.UTF_8), 0, paddedData, 0, "EN-RPI".length());
 
         //Start regeneration of RPIs
@@ -114,7 +116,7 @@ public class Utils {
             paddedData[14] = (byte) (currentENIN >> 16 % 0xFF);
             paddedData[15] = (byte) (currentENIN >> 24 % 0xFF);
 
-            byte[] rollingProximityID = new byte[0];
+
             try {
                 rollingProximityID = cipher.doFinal(paddedData);
             } catch (BadPaddingException | IllegalBlockSizeException e) {
@@ -123,6 +125,9 @@ public class Utils {
             Log.d(LOG_TAG, "TEK: " + Arrays.toString(TEK)
                     + " ENIN: " + currentENIN
                     + " RPI: " + Arrays.toString(rollingProximityID));
+            for(byte[] rpi: rpiArrayList){
+                Log.d(LOG_TAG, "RPI from ROOM: " + Arrays.toString(rpi));
+            }
 
         }
     }

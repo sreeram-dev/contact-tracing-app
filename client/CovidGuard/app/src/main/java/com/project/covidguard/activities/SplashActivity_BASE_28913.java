@@ -26,8 +26,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
-import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
@@ -37,8 +35,6 @@ import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
-import com.project.covidguard.tasks.DownloadTEKTask;
-import com.project.covidguard.tasks.SubmitTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
@@ -185,6 +181,38 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
+    public void clickRegistrationHandler(View view) {
+        final String uuid = UUID.randomUUID().toString().replace("-", "");
+
+        if (!isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
+            Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
+        }
+
+        if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
+            generateAndStoreToken(uuid);
+        } else {
+            Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
+        }
+
+        Intent serviceIntent = new Intent(this, ExposureKeyService.class);
+        serviceIntent.putExtra("inputExtra", "Do not force stop this");
+        ContextCompat.startForegroundService(this, serviceIntent);
+        setContentView(R.layout.diagnose_fragment);
+    }
+
+    public void clickSubmitHandler(View view) {
+        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
+        TEKRepository repo = new TEKRepository(getApplicationContext());
+        LiveData<List<TEK>> teks = repo.getAllTEKs();
+        teks.observe(this, new Observer<List<TEK>>() {
+            @Override
+            public void onChanged(List<TEK> teks) {
+                Log.d(LOG_TAG, "Recent TEKS from SQLITE: " + teks.size());
+            }
+        });
+
+    }
+
     private void storeUUIDAndToken(String uuid, String token) {
         try {
             SharedPreferences sharedPref = StorageUtils.getEncryptedSharedPref(
@@ -302,72 +330,45 @@ public class SplashActivity extends AppCompatActivity {
         builder.create().show();
     }
 
-    public void clickRegistrationHandler(View view) {
-        final String uuid = UUID.randomUUID().toString().replace("-", "");
-
-        if (!isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
-            Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
-        }
-
-        if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
-            generateAndStoreToken(uuid);
-        } else {
-            Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
-        }
-
-        Intent serviceIntent = new Intent(this, ExposureKeyService.class);
-        serviceIntent.putExtra("inputExtra", "Do not force stop this");
-        ContextCompat.startForegroundService(this, serviceIntent);
-        setContentView(R.layout.diagnose_fragment);
-    }
-
-    public void clickSubmitHandler(View view) {
-        WorkManager.getInstance(getApplicationContext()).enqueue(SubmitTEKTask.getOneTimeRequest());
-        WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
-        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
-    }
-
     public void clickMatchMaker(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         LiveData<List<TEK>> teks = repo.getAllTEKs();
-        RPIRepository repoRPI = new RPIRepository(getApplicationContext());
-        LiveData<List<RPI>> rpis = repoRPI.getLatestRPIs();
-        ArrayList<byte[]> rpiArrayList = new ArrayList<>();
+        ArrayList<byte[]> RPIList = new ArrayList<>();
+        teks.observe(this, new Observer<List<TEK>>() {
+            @SuppressLint("GetInstance")
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onChanged(List<TEK> teks) {
+                for (TEK tek : teks) {
+                    //initialise GAEN variables based on fetched TEK and ENIN
 
-        rpis.observe(this, rpis1 -> {
-            for (RPI rpi : rpis1) {
-                byte[] rpiFromRoom = Base64.decode(rpi.rpi, Base64.DEFAULT);
-                rpiArrayList.add(rpiFromRoom);
-            }
-        });
-
-        teks.observe(this, teks1 -> {
-            for (TEK tek : teks1) {
-                //initialise GAEN variables based on fetched TEK and ENIN
-
-                byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-                long ENIntervalNumber = tek.getEnIntervalNumber();
-                Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
+                    byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
+                    long ENIntervalNumber = tek.getEnIntervalNumber();
+                    Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber);
+                }
             }
         });
     }
 
     public void clickDeveloperMetricsHandler(View view) {
+
         setContentView(R.layout.metrics);
     }
 
     public void clickTEKMetric(View view) {
+
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentTEK = repo.getLastTek();
         byte[] currentTEKByteArray = Base64.decode(currentTEK.getTekId(), Base64.DEFAULT);
         Toast.makeText(getApplicationContext(), "Current RPIs are derived from the TEK: " + Arrays.toString(currentTEKByteArray), Toast.LENGTH_SHORT).show();
+
     }
 
     public void clickRPIMetric(View view) {
         RPIRepository repo = new RPIRepository(getApplicationContext());
         RPI rpi = repo.getLastRPI();
 
-        if (rpi.rpi==null)
+        if (rpi.rpi.isEmpty())
             Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + rpi.rpi, Toast.LENGTH_SHORT).show();
@@ -379,8 +380,7 @@ public class SplashActivity extends AppCompatActivity {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentENIN = repo.getLastTek();
 
-
-        Toast.makeText(getApplicationContext(), "Current TEK was derived at the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Current TEK is derived from the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
 
     }
 }

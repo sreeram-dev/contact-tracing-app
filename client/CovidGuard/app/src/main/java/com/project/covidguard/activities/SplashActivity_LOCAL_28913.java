@@ -330,24 +330,19 @@ public class SplashActivity extends AppCompatActivity {
     public void clickMatchMaker(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         LiveData<List<TEK>> teks = repo.getAllTEKs();
-        RPIRepository repoRPI = new RPIRepository(getApplicationContext());
-        LiveData<List<RPI>> rpis = repoRPI.getLatestRPIs();
-        ArrayList<byte[]> rpiArrayList = new ArrayList<>();
+        ArrayList<byte[]> RPIList = new ArrayList<>();
+        teks.observe(this, new Observer<List<TEK>>() {
+            @SuppressLint("GetInstance")
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void onChanged(List<TEK> teks) {
+                for (TEK tek : teks) {
+                    //initialise GAEN variables based on fetched TEK and ENIN
 
-        rpis.observe(this, rpis1 -> {
-            for (RPI rpi : rpis1) {
-                byte[] rpiFromRoom = Base64.decode(rpi.rpi, Base64.DEFAULT);
-                rpiArrayList.add(rpiFromRoom);
-            }
-        });
-
-        teks.observe(this, teks1 -> {
-            for (TEK tek : teks1) {
-                //initialise GAEN variables based on fetched TEK and ENIN
-
-                byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-                long ENIntervalNumber = tek.getEnIntervalNumber();
-                Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
+                    byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
+                    long ENIntervalNumber = tek.getEnIntervalNumber();
+                    Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber);
+                }
             }
         });
     }
@@ -367,7 +362,7 @@ public class SplashActivity extends AppCompatActivity {
         RPIRepository repo = new RPIRepository(getApplicationContext());
         RPI rpi = repo.getLastRPI();
 
-        if (rpi.rpi==null)
+        if (rpi.rpi.isEmpty())
             Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + rpi.rpi, Toast.LENGTH_SHORT).show();
@@ -379,8 +374,6 @@ public class SplashActivity extends AppCompatActivity {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentENIN = repo.getLastTek();
 
-
-        Toast.makeText(getApplicationContext(), "Current TEK was derived at the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
-
+        Toast.makeText(getApplicationContext(), "Current TEK is derived from the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
     }
 }

@@ -379,8 +379,11 @@ public class SplashActivity extends AppCompatActivity {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentENIN = repo.getLastTek();
 
-
+<<<<<<< HEAD
+        Toast.makeText(getApplicationContext(), "Current TEK is derived from the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
+=======
         Toast.makeText(getApplicationContext(), "Current TEK was derived at the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
 
+>>>>>>> 0800bb7... logic for fetching encountered stored rpi for matchmaking
     }
 }
