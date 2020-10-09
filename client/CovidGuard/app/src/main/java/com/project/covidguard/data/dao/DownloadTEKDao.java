@@ -41,5 +41,5 @@ public interface  DownloadTEKDao {
      * Drop all downloaded teks
      */
     @Query("DELETE FROM downloaded_teks")
-    void deleteFromDownloadedTEKs();
+    void truncateTable();
 }
