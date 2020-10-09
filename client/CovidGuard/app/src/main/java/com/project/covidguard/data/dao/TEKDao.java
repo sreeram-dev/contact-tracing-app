@@ -37,18 +37,12 @@ public interface  TEKDao {
     @Query("SELECT * FROM teks where created_at >= :from and created_at < :to")
     List<TEK> getTEKFromTimeStampSync(Long from, Long to);
 
-
     /**
      * Get the last TEK stored in the database
      * @return TEK - the last tek by created_at
      */
     @Query("SELECT * FROM teks ORDER BY created_at DESC LIMIT 1")
     TEK getLastTEK();
-
-
-
-
-
 
     /**
      * DELETE data from the database based on the timestamp

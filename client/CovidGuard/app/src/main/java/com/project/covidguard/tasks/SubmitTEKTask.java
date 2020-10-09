@@ -16,7 +16,7 @@ import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
 import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.TEKRepository;
-import com.project.covidguard.web.dto.UploadTEKRequest;
+import com.project.covidguard.web.requests.UploadTEKRequest;
 import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RequestTANResponse;
 import com.project.covidguard.web.responses.UploadDiagnosisKeyResponse;
@@ -27,7 +27,6 @@ import com.project.covidguard.web.services.VerificationService;
 
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.ZoneId;
-import org.threeten.bp.ZoneOffset;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;

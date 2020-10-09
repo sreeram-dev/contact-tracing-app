@@ -37,6 +37,7 @@ import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
+import com.project.covidguard.tasks.DownloadTEKTask;
 import com.project.covidguard.tasks.SubmitTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
@@ -184,31 +185,6 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
-    public void clickRegistrationHandler(View view) {
-        final String uuid = UUID.randomUUID().toString().replace("-", "");
-
-        if (!isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
-            Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
-        }
-
-        if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
-            generateAndStoreToken(uuid);
-        } else {
-            Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
-        }
-
-        Intent serviceIntent = new Intent(this, ExposureKeyService.class);
-        serviceIntent.putExtra("inputExtra", "Do not force stop this");
-        ContextCompat.startForegroundService(this, serviceIntent);
-        setContentView(R.layout.diagnose_fragment);
-    }
-
-    public void clickSubmitHandler(View view) {
-        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
-        WorkRequest request = SubmitTEKTask.getOneTimeRequest();
-        WorkManager.getInstance(getApplicationContext()).enqueue(request);
-    }
-
     private void storeUUIDAndToken(String uuid, String token) {
         try {
             SharedPreferences sharedPref = StorageUtils.getEncryptedSharedPref(
@@ -326,6 +302,31 @@ public class SplashActivity extends AppCompatActivity {
         builder.create().show();
     }
 
+    public void clickRegistrationHandler(View view) {
+        final String uuid = UUID.randomUUID().toString().replace("-", "");
+
+        if (!isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
+            Toast.makeText(this, "No Network connection available to store uuid", Toast.LENGTH_LONG).show();
+        }
+
+        if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
+            generateAndStoreToken(uuid);
+        } else {
+            Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
+        }
+
+        Intent serviceIntent = new Intent(this, ExposureKeyService.class);
+        serviceIntent.putExtra("inputExtra", "Do not force stop this");
+        ContextCompat.startForegroundService(this, serviceIntent);
+        setContentView(R.layout.diagnose_fragment);
+    }
+
+    public void clickSubmitHandler(View view) {
+        WorkManager.getInstance(getApplicationContext()).enqueue(SubmitTEKTask.getOneTimeRequest());
+        WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
+        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
+    }
+
     public void clickMatchMaker(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         LiveData<List<TEK>> teks = repo.getAllTEKs();
@@ -347,17 +348,14 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     public void clickDeveloperMetricsHandler(View view) {
-
         setContentView(R.layout.metrics);
     }
 
     public void clickTEKMetric(View view) {
-
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentTEK = repo.getLastTek();
         byte[] currentTEKByteArray = Base64.decode(currentTEK.getTekId(), Base64.DEFAULT);
         Toast.makeText(getApplicationContext(), "Current RPIs are derived from the TEK: " + Arrays.toString(currentTEKByteArray), Toast.LENGTH_SHORT).show();
-
     }
 
     public void clickRPIMetric(View view) {
@@ -377,6 +375,5 @@ public class SplashActivity extends AppCompatActivity {
         TEK currentENIN = repo.getLastTek();
 
         Toast.makeText(getApplicationContext(), "Current TEK is derived from the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
-
     }
 }

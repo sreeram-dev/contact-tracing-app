@@ -10,8 +10,11 @@ import androidx.lifecycle.LiveData;
 
 import com.project.covidguard.AppExecutors;
 import com.project.covidguard.data.AppDatabase;
+import com.project.covidguard.data.dao.DownloadTEKDao;
 import com.project.covidguard.data.dao.TEKDao;
+import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.data.entities.TEK;
+import com.project.covidguard.web.responses.DownloadTEKResponse;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -29,16 +32,19 @@ public class TEKRepository {
     private final ZoneId zoneId = ZoneId.systemDefault();
 
     private TEKDao mTekDao;
+    private DownloadTEKDao mDownloadedTEKDao;
 
     private final AppExecutors executors = AppExecutors.getInstance();
 
     // LiveData is a DataHolder class that allows for notifying database changes.
     private LiveData<List<TEK>> mTeks;
+    private LiveData<List<DownloadTEK>> mDownloadedTeks;
 
     public TEKRepository(Context context) {
         AppDatabase db = AppDatabase.getDatabase(context);
         Log.d(LOG_TAG, "Is Database open: " + db.isOpen());
         mTekDao = db.tekDao();
+        mDownloadedTEKDao = db.downloadTEKDao();
     }
 
 
@@ -49,21 +55,7 @@ public class TEKRepository {
     public LiveData<List<TEK>> getAllTEKs() {
         if (mTeks == null) {
             Long timestamp = LocalDateTime.now().minusDays(30).atZone(zoneId).toEpochSecond();
-
-            try {
-                Future<LiveData<List<TEK>>> future = executors.diskIO().submit(
-                        () -> mTekDao.getTEKFromTimeStamp(timestamp));
-                mTeks = future.get();
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
-                Log.e(LOG_TAG, "Could not fetch all teks - Interrupted Exception");
-                mTeks = null;
-            } catch (ExecutionException ex) {
-                ex.printStackTrace();
-                Log.e(LOG_TAG, "Could not fetch all teks - Executed Exception");
-                mTeks = null;
-            }
-
+            mTeks = mTekDao.getTEKFromTimeStamp(timestamp);
         }
 
         return mTeks;
@@ -97,9 +89,6 @@ public class TEKRepository {
 
         return null;
     }
-
-
-
 
     /**
      * Stores the TEK and ENIntervalNumber
@@ -161,5 +150,31 @@ public class TEKRepository {
         }
 
         return null;
+    }
+
+    /**
+     * get all downloaded teks
+     */
+    public LiveData<List<DownloadTEK>> getDataFromTimestamp() {
+        if (mDownloadedTeks == null) {
+            mDownloadedTeks = mDownloadedTEKDao.getAllDownloadedTEKS();
+        }
+
+        return mDownloadedTeks;
+    }
+
+    /**
+     *
+     * @param tekString
+     * @param enIntervalNumber
+     */
+    public void storeDownloadedTEKWithEnIntervalNumber(String tekString, Long enIntervalNumber) {
+        DownloadTEK tek = new DownloadTEK(tekString, enIntervalNumber);
+        executors.diskIO().submit(new Runnable() {
+            @Override
+            public void run() {
+                mDownloadedTEKDao.insert(tek);
+            }
+        });
     }
 }
