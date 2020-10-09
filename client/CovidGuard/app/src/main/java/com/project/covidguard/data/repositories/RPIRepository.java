@@ -41,12 +41,12 @@ public class RPIRepository {
      * @param limit - the number of latest rpi
      * @return
      */
-    public LiveData<List<RPI>> getLatestRPIs(Integer limit) {
+    public LiveData<List<RPI>> getLatestRPIs() {
         if (mLatestRPIs == null) {
             try {
                 Future<LiveData<List<RPI>>> future = executors.diskIO().submit(() -> {
                     Long timestamp = LocalDateTime.now().minusDays(15).atZone(zoneId).toEpochSecond();
-                    return mRPIDao.getRPIFromTimestamp(timestamp, limit);
+                    return mRPIDao.getRPIFromTimestamp(timestamp );
                 });
                 mLatestRPIs = future.get();
             } catch (ExecutionException ex) {
