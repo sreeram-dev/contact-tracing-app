@@ -1,13 +1,11 @@
 package com.project.covidguard.data.dao;
 
 
-import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.project.covidguard.data.entities.RPI;
-import com.project.covidguard.data.entities.TEK;
 
 import java.util.List;
 
@@ -18,10 +16,10 @@ public interface RPIDao {
     void insert(RPI rpi);
 
     @Query("SELECT * FROM rpis where received_at >= :timestamp")
-    LiveData<List<RPI>> getRPIFromTimestamp(Long timestamp);
+    List<RPI> getRPIFromTimestamp(Long timestamp);
+
     @Query("SELECT * FROM rpis ORDER BY received_at DESC LIMIT 1")
     RPI getLastRPI();
-
 }
 
 

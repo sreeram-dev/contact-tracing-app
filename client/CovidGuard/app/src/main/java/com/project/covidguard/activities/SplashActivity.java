@@ -45,9 +45,12 @@ import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
 import org.altbeacon.beacon.BeaconManager;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.ZoneId;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -329,27 +332,22 @@ public class SplashActivity extends AppCompatActivity {
 
     public void clickMatchMaker(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
-        LiveData<List<TEK>> teks = repo.getAllTEKs();
+        List<TEK> teks = repo.getAllTEKs();
         RPIRepository repoRPI = new RPIRepository(getApplicationContext());
-        LiveData<List<RPI>> rpis = repoRPI.getLatestRPIs();
+        List<RPI> rpis = repoRPI.getLatestRPIs();
         ArrayList<byte[]> rpiArrayList = new ArrayList<>();
 
-        rpis.observe(this, rpis1 -> {
-            for (RPI rpi : rpis1) {
-                byte[] rpiFromRoom = Base64.decode(rpi.rpi, Base64.DEFAULT);
-                rpiArrayList.add(rpiFromRoom);
-            }
-        });
+        for (RPI rpi : rpis) {
+            byte[] rpiFromRoom = Base64.decode(rpi.rpi, Base64.DEFAULT);
+            rpiArrayList.add(rpiFromRoom);
+        }
 
-        teks.observe(this, teks1 -> {
-            for (TEK tek : teks1) {
-                //initialise GAEN variables based on fetched TEK and ENIN
-
-                byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-                long ENIntervalNumber = tek.getEnIntervalNumber();
-                Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
-            }
-        });
+        for (TEK tek : teks) {
+            //initialise GAEN variables based on fetched TEK and ENIN
+            byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
+            long ENIntervalNumber = tek.getEnIntervalNumber();
+            Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
+        }
     }
 
     public void clickDeveloperMetricsHandler(View view) {

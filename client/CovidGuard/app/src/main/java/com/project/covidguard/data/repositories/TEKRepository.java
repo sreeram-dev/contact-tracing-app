@@ -1,9 +1,7 @@
 package com.project.covidguard.data.repositories;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -14,7 +12,6 @@ import com.project.covidguard.data.dao.DownloadTEKDao;
 import com.project.covidguard.data.dao.TEKDao;
 import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.data.entities.TEK;
-import com.project.covidguard.web.responses.DownloadTEKResponse;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -36,10 +33,6 @@ public class TEKRepository {
 
     private final AppExecutors executors = AppExecutors.getInstance();
 
-    // LiveData is a DataHolder class that allows for notifying database changes.
-    private LiveData<List<TEK>> mTeks;
-    private LiveData<List<DownloadTEK>> mDownloadedTeks;
-
     public TEKRepository(Context context) {
         AppDatabase db = AppDatabase.getDatabase(context);
         Log.d(LOG_TAG, "Is Database open: " + db.isOpen());
@@ -52,13 +45,25 @@ public class TEKRepository {
      * Get the liveData of all the TEKs
      * @return
      */
-    public LiveData<List<TEK>> getAllTEKs() {
-        if (mTeks == null) {
-            Long timestamp = LocalDateTime.now().minusDays(30).atZone(zoneId).toEpochSecond();
-            mTeks = mTekDao.getTEKFromTimeStamp(timestamp);
+    public List<TEK> getAllTEKs() {
+        Long timestamp = LocalDateTime.now().minusDays(14).atZone(zoneId).toEpochSecond();
+        Future<List<TEK>> future = executors.diskIO().submit(() -> mTekDao.getTEKFromTimeStamp(timestamp));
+        List<TEK> teks;
+
+        try {
+            teks = future.get();
+            return teks;
+        } catch(InterruptedException ex) {
+            ex.printStackTrace();
+            Log.e(LOG_TAG, "Last Tek Fetch Failed - Interrupted Exception");
+            teks = null;
+        } catch(ExecutionException ex) {
+            ex.printStackTrace();
+            Log.e(LOG_TAG, "Last Tek Fetch Failed - Execution Exception");
+            teks = null;
         }
 
-        return mTeks;
+        return teks;
     }
 
     /**
@@ -155,12 +160,20 @@ public class TEKRepository {
     /**
      * get all downloaded teks
      */
-    public LiveData<List<DownloadTEK>> getDataFromTimestamp() {
-        if (mDownloadedTeks == null) {
-            mDownloadedTeks = mDownloadedTEKDao.getAllDownloadedTEKS();
+    public List<DownloadTEK> getAllDownloadedTEKsSync() {
+        List<DownloadTEK> teks;
+
+        Future<List<DownloadTEK>> future = executors.diskIO().submit(
+                () -> mDownloadedTEKDao.getAllDownloadedTEKS());
+
+        try {
+            teks = future.get();
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            teks = null;
         }
 
-        return mDownloadedTeks;
+        return teks;
     }
 
     /**
@@ -170,18 +183,13 @@ public class TEKRepository {
      */
     public void storeDownloadedTEKWithEnIntervalNumber(String tekString, Long enIntervalNumber) {
         DownloadTEK tek = new DownloadTEK(tekString, enIntervalNumber);
-        executors.diskIO().submit(new Runnable() {
-            @Override
-            public void run() {
-                mDownloadedTEKDao.insert(tek);
-            }
-        });
+        executors.diskIO().submit(() -> mDownloadedTEKDao.insert(tek));
     }
 
     /**
      * Truncates the downloaded tek repository
      */
-    public void truncateDownloadTeks() {
+    public void truncateDownloadTeksSync() {
         Log.d(LOG_TAG, "Truncating the downloadTEKs table");
         mDownloadedTEKDao.truncateTable();
     }

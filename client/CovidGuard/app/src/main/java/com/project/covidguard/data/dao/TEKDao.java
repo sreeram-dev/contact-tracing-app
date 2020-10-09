@@ -20,9 +20,6 @@ public interface  TEKDao {
     @Insert
     void insert(TEK tek);
 
-    @Update
-    void update(TEK tek);
-
     /**
      * Fetch the TEK corresponding to the ENIntervalNumber
      * @param ENIntervalNumber
@@ -32,7 +29,7 @@ public interface  TEKDao {
     TEK fetchByENInterval(Long ENIntervalNumber);
 
     @Query("SELECT * FROM teks where created_at >= :timestamp")
-    LiveData<List<TEK>> getTEKFromTimeStamp(Long timestamp);
+    List<TEK> getTEKFromTimeStamp(Long timestamp);
 
     @Query("SELECT * FROM teks where created_at >= :from and created_at < :to")
     List<TEK> getTEKFromTimeStampSync(Long from, Long to);

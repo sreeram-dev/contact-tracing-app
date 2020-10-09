@@ -35,7 +35,7 @@ public interface  DownloadTEKDao {
      * Get all downloaded teks
      */
     @Query("SELECT * FROM downloaded_teks;")
-    LiveData<List<DownloadTEK>> getAllDownloadedTEKS();
+    List<DownloadTEK> getAllDownloadedTEKS();
 
     /**
      * Drop all downloaded teks

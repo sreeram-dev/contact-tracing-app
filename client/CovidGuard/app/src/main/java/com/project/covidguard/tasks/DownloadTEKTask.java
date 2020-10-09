@@ -47,7 +47,7 @@ public class DownloadTEKTask extends Worker {
             return Result.failure();
         }
 
-        tekRepo.truncateDownloadTeks();
+        tekRepo.truncateDownloadTeksSync();
 
         Log.d(LOG_TAG, "Storing downloaded teks, size: " + tekPairs.size());
 
