@@ -177,4 +177,12 @@ public class TEKRepository {
             }
         });
     }
+
+    /**
+     * Truncates the downloaded tek repository
+     */
+    public void truncateDownloadTeks() {
+        Log.d(LOG_TAG, "Truncating the downloadTEKs table");
+        mDownloadedTEKDao.truncateTable();
+    }
 }
