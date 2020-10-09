@@ -8,6 +8,10 @@ resource "google_project" "covidguard_lis_server" {
   name = "LIS Server"
   project_id = "lis-server-289906"
   billing_account = "012ADE-0F81EE-F7AEC5"
+
+   lifecycle {
+        prevent_destroy = true
+    }
 }
 
 

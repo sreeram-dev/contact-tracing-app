@@ -8,6 +8,10 @@ resource "google_project" "covidguard_ens_server" {
   name = "ENS Server"
   project_id = "ens-server"
   billing_account = "012ADE-0F81EE-F7AEC5"
+
+  lifecycle {
+      prevent_destroy = true
+  }
 }
 
 
@@ -31,6 +35,8 @@ module "covidguard-ens-project-services" {
     "cloudbilling.googleapis.com",
     "cloudbuild.googleapis.com",
     "secretmanager.googleapis.com",
+    "dataflow.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
   ]
 
   disable_dependent_services = true
