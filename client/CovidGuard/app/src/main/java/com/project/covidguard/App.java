@@ -7,12 +7,9 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
-import androidx.work.Worker;
 
 import com.facebook.stetho.Stetho;
 import com.project.covidguard.data.AppDatabase;
-import com.project.covidguard.tasks.SubmitTEKTask;
 
 import org.conscrypt.Conscrypt;
 

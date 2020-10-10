@@ -2,7 +2,6 @@
 package com.project.covidguard.activities;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,9 +24,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
@@ -38,7 +37,8 @@ import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
 import com.project.covidguard.tasks.DownloadTEKTask;
-import com.project.covidguard.tasks.SubmitTEKTask;
+import com.project.covidguard.tasks.RequestTANTask;
+import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
 import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
@@ -325,7 +325,13 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     public void clickSubmitHandler(View view) {
-        WorkManager.getInstance(getApplicationContext()).enqueue(SubmitTEKTask.getOneTimeRequest());
+        Data data = new Data.Builder()
+            .putString("TAN", "1234-5678")
+            .build();
+        WorkManager wm = WorkManager.getInstance(getApplicationContext());
+        wm.beginWith(RequestTANTask.getOneTimeRequest())
+            .then(UploadTEKTask.getOneTimeRequestWithoutParams())
+            .enqueue();
         WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
         Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
     }
