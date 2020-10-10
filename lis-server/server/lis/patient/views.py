@@ -128,7 +128,7 @@ class StatusView(MethodView):
     def _validate_request(self, request):
         """Validate the request
         """
-        uuid = request.form.get('uuid', None)
+        uuid = request.args.get('uuid', None)
         if uuid is None:
             raise KeyError('UUID param is required')
 
@@ -152,7 +152,7 @@ class StatusView(MethodView):
             }
             return jsonify(data), 400
 
-        uuid = request.form.get('uuid')
+        uuid = request.args.get('uuid')
 
         profile = self.patient_service.find_by_uuid(uuid)
 
