@@ -2,8 +2,6 @@
 """Seed registry to seed the initial database
 """
 
-# -*- coding:utf-8 -*-
-
 
 import os
 import json

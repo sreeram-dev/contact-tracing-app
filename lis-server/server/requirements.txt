@@ -4,7 +4,8 @@ flask-script==2.0.6
 jsonformatter==0.3.0
 flask-google-cloud-logger==0.2.1
 flask-talisman==0.7.0
-sqreen==1.23.0
+fireo==1.3.3
+requests==2.24.0
 
 
 google-api-python-client==1.10.0

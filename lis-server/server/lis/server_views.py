@@ -10,7 +10,7 @@ class IndexView(MethodView):
     def get(self):
         return jsonify({
             'success': True,
-            'message': 'Welcome to LIS HealthCare API'
+            'message': 'Welcome to covidguard Test Result Server'
         }), 200
 
 
@@ -21,4 +21,3 @@ class WarmupView(MethodView):
             'success': True,
             'message': 'Warmup Request'
         }), 200
-
