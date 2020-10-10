@@ -92,3 +92,29 @@ class DownloadView(MethodView):
         """
         teks = self.diagnosis_service.download_teks()
         return jsonify({'teks': teks}), 200
+
+
+class DeleteTEKView(MethodView):
+    diagnosis_service = DiagnosisKeyService()
+    APPENGINE_CRON_HEADER = 'X-Appengine-Cron'
+
+    def post(self):
+
+        cron_header = request.headers.get('X-Appengine-Cron')
+        if cron_header is None or cron_header != 'true':
+            data = {
+                'code': 400,
+                'name': 'DiagnosisDeleteService',
+                'description': 'Only accessible by cron.yaml'
+            }
+
+            return jsonify(data), 400
+
+        self.diagnosis_service.delete_old_teks()
+
+        data = {
+            'success': True,
+            'message': 'Successfully deleted older teks'
+        }
+
+        return jsonify(data), 200

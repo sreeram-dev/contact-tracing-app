@@ -4,7 +4,9 @@ from urllib.parse import urlencode
 from datetime import datetime, timedelta
 from typing import List
 
+from ens.app import app
 from ens.diagnosis.models import TEKInfo
+from ens.utils import get_enin
 
 
 class DiagnosisKeyRepository(object):
@@ -37,3 +39,19 @@ class DiagnosisKeyRepository(object):
         teks = TEKInfo.collection.filter(
             'created_at', '>=', minus_fourteen).fetch()
         return teks
+
+    def delete_from_timesamp(self, timestamp: int):
+        """Delete from all the timestamps
+        """
+        enin = get_enin(timestamp)
+        app.logger.info(
+            f"Deleting old teks from enin: {enin} and {timestamp}")
+
+        teks = TEKInfo.collection.filter(
+            'en_interval_number', '>=', enin).fetch()
+        key_list = list(map(lambda d: d.id, teks))
+
+        app.logger.info(
+            f"Deleting {len(key_list)} teks from {TEKInfo.collection_name}")
+
+        TEKInfo.collection.delete_all(key_list)

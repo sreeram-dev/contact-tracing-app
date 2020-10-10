@@ -7,5 +7,6 @@ PROJECT_ID = 'ens-server'
 
 VALID_APP_MODES = ['dev', 'test', 'prod']
 
-
 TOKEN_COLLECTION = 'tokens'
+
+CLIENT_RPI_INTERVAL = 1

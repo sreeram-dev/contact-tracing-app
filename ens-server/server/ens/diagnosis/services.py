@@ -2,7 +2,7 @@
 
 import requests
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import List
 
 from ens.diagnosis.repo import DiagnosisKeyRepository
@@ -45,3 +45,12 @@ class DiagnosisKeyService(object):
             tek_info = doc.to_dict()
             teks.append(tek_info)
         return teks
+
+    def delete_old_teks(self):
+        """Delete the old teks
+        """
+        now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        expired_at = now - timedelta(days=14)
+        epoch_timestamp = int(expired_at.timestamp())
+
+        self.diag_repo.delete_from_timesamp(epoch_timestamp)
