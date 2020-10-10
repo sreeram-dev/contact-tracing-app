@@ -40,14 +40,18 @@ public class DownloadTEKTask extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-
+        tekRepo.truncateDownloadTeksSync();
         List<Pair<String, Long>> tekPairs = downloadInfectedTEK();
 
-        if (tekPairs == null || tekPairs.isEmpty()) {
+        if (tekPairs == null) {
             return Result.failure();
         }
 
-        tekRepo.truncateDownloadTeksSync();
+        if (tekPairs.isEmpty()) {
+            return Result.success();
+        }
+
+
 
         Log.d(LOG_TAG, "Storing downloaded teks, size: " + tekPairs.size());
 

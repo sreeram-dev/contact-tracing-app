@@ -3,6 +3,7 @@ package com.project.covidguard.data.dao;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
@@ -22,6 +23,9 @@ public interface  DownloadTEKDao {
 
     @Update
     void update(DownloadTEK tek);
+
+    @Delete
+    void delete(DownloadTEK tek);
 
     /**
      * Fetch the TEK corresponding to the ENIntervalNumber

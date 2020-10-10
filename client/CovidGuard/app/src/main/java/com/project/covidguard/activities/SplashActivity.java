@@ -31,6 +31,7 @@ import androidx.work.WorkManager;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
+import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.data.entities.RPI;
 import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.RPIRepository;
@@ -45,6 +46,7 @@ import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
 import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.Identifier;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.ZoneId;
 
@@ -332,28 +334,48 @@ public class SplashActivity extends AppCompatActivity {
         wm.beginWith(RequestTANTask.getOneTimeRequest())
             .then(UploadTEKTask.getOneTimeRequestWithoutParams())
             .enqueue();
-        WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
         Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
     }
 
     public void clickMatchMaker(View view) {
+        WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
+
         TEKRepository repo = new TEKRepository(getApplicationContext());
-        List<TEK> teks = repo.getAllTEKs();
+        List<DownloadTEK> teks = repo.getAllDownloadedTEKsSync();
         RPIRepository repoRPI = new RPIRepository(getApplicationContext());
         List<RPI> rpis = repoRPI.getLatestRPIs();
         ArrayList<byte[]> rpiArrayList = new ArrayList<>();
+        int result=1000;
 
         for (RPI rpi : rpis) {
-            byte[] rpiFromRoom = Base64.decode(rpi.rpi, Base64.DEFAULT);
+            byte[] rpiFromRoom = Identifier.parse(rpi.rpi,16).toByteArray();
             rpiArrayList.add(rpiFromRoom);
         }
 
-        for (TEK tek : teks) {
+        for (DownloadTEK tek : teks) {
             //initialise GAEN variables based on fetched TEK and ENIN
-            byte[] TEKByteArray = Base64.decode(tek.getTekId(), Base64.DEFAULT);
-            long ENIntervalNumber = tek.getEnIntervalNumber();
-            Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
-        }
+
+
+                //initialise GAEN variables based on fetched TEK and ENIN
+
+                byte[] TEKByteArray = Base64.decode(tek.getTek(), Base64.DEFAULT);
+                long ENIntervalNumber = tek.getEnIntervalNumber();
+                result = Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
+                if(result==1){
+                    Toast.makeText(this, "You have been in contact with a COVID positive case. Seek medical attention immediately!", Toast.LENGTH_LONG).show();
+                    break;
+                }
+
+            }
+            Log.d("RESULT FROM UTILS", String.valueOf(result));
+            if(result==0 || result ==1000) {
+                Toast.makeText(this, "You are safe!", Toast.LENGTH_LONG).show();
+            }
+            else if(result==999){
+                Toast.makeText(this, "System Error", Toast.LENGTH_LONG).show();
+
+            }
+
     }
 
     public void clickDeveloperMetricsHandler(View view) {
@@ -371,10 +393,10 @@ public class SplashActivity extends AppCompatActivity {
         RPIRepository repo = new RPIRepository(getApplicationContext());
         RPI rpi = repo.getLastRPI();
 
-        if (rpi.rpi==null)
+        if (rpi==null)
             Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
         else
-            Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + rpi.rpi, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + Arrays.toString(Identifier.parse(rpi.rpi, 16).toByteArray()), Toast.LENGTH_SHORT).show();
 
 
     }

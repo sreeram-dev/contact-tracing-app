@@ -89,11 +89,11 @@ public class Utils {
         return null;
     }
 
-    public static void generateAllRPIsForTEKAndEnIntervalNumber(byte[] TEK, Long ENIN,  ArrayList<byte[]> rpiArrayList) {
+    public static int generateAllRPIsForTEKAndEnIntervalNumber(byte[] TEK, Long ENIN,  ArrayList<byte[]> rpiArrayList) {
         byte[] RPIKey = getRPIKeyFromTEK(TEK);
         SecretKeySpec aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
         Cipher cipher;
-        long ENIntervalNumberLimit = ENIN +5;
+        long ENIntervalNumberLimit = ENIN +10;
 
         try {
             cipher = Cipher.getInstance("AES/ECB/NoPadding");
@@ -101,7 +101,7 @@ public class Utils {
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
             Log.e(LOG_TAG, "cipher initialization failed");
             e.printStackTrace();
-            return;
+            return 999;
         }
 
         byte[] paddedData = new byte[16];
@@ -125,10 +125,13 @@ public class Utils {
             Log.d(LOG_TAG, "TEK: " + Arrays.toString(TEK)
                     + " ENIN: " + currentENIN
                     + " RPI: " + Arrays.toString(rollingProximityID));
-            for(byte[] rpi: rpiArrayList){
-                Log.d(LOG_TAG, "RPI from ROOM: " + Arrays.toString(rpi));
+            for(byte[] rpi: rpiArrayList) {
+                boolean result = Arrays.equals(rpi, rollingProximityID);
+                if (result)
+                    return 1;
             }
-
         }
+        return 0;
     }
+
 }

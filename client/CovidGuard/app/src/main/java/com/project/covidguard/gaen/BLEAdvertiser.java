@@ -49,6 +49,7 @@ public class BLEAdvertiser implements Observer {
         byte[] rollingProximityID = (byte[]) o;
 
         String key = Identifier.fromBytes(rollingProximityID, 0, 16, false).toString();
+
         Beacon beacon = new Beacon.Builder()
                 .setId1(key)
                 .build();
