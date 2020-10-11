@@ -23,9 +23,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LiveData;
 import androidx.work.Data;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import com.project.covidguard.ExposureKeyService;
@@ -47,12 +45,9 @@ import com.project.covidguard.web.services.VerificationService;
 
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.Identifier;
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.ZoneId;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -85,7 +80,7 @@ public class SplashActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void checkAndRequestPermissions() {
         String[] permissions = {
-                Manifest.permission.ACCESS_FINE_LOCATION // manual permission required.
+            Manifest.permission.ACCESS_FINE_LOCATION // manual permission required.
         };
 
         ArrayList<String> permissionsNeeded = new ArrayList<>();
@@ -121,7 +116,7 @@ public class SplashActivity extends AppCompatActivity {
                 ArrayList<String> deniedPermissions = new ArrayList<>();
                 for (int i = 0; i < permissions.length; i++) {
                     if (compulsoryPermissions.contains(permissions[i]) &&
-                            grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         deniedPermissions.add(permissions[i]);
                     } else {
                         Log.d(LOG_TAG, permissions[i] + " has been granted");
@@ -137,7 +132,7 @@ public class SplashActivity extends AppCompatActivity {
                 deniedPermissions = new ArrayList<>();
                 for (int i = 0; i < permissions.length; i++) {
                     if (compulsoryPermissions.contains(permissions[i]) &&
-                            grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         deniedPermissions.add(permissions[i]);
                     }
                 }
@@ -193,7 +188,7 @@ public class SplashActivity extends AppCompatActivity {
     private void storeUUIDAndToken(String uuid, String token) {
         try {
             SharedPreferences sharedPref = StorageUtils.getEncryptedSharedPref(
-                    getApplicationContext(), (getString(R.string.preference_file_key)));
+                getApplicationContext(), (getString(R.string.preference_file_key)));
             SharedPreferences.Editor editor = sharedPref.edit();
             // token and uuid are related.
             editor.putString("token", token);
@@ -242,12 +237,12 @@ public class SplashActivity extends AppCompatActivity {
 
     public boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
+            getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
 
         if (networkInfo == null || !networkInfo.isConnected() ||
-                (networkInfo.getType() != ConnectivityManager.TYPE_WIFI
-                        && networkInfo.getType() != ConnectivityManager.TYPE_MOBILE)) {
+            (networkInfo.getType() != ConnectivityManager.TYPE_WIFI
+                && networkInfo.getType() != ConnectivityManager.TYPE_MOBILE)) {
             return false;
         }
 
@@ -263,7 +258,7 @@ public class SplashActivity extends AppCompatActivity {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("We need the permissions");
         builder.setMessage("Compulsory permissions have not been granted. " +
-                "They are needed for full functionality of the app");
+            "They are needed for full functionality of the app");
         builder.setNegativeButton(R.string.dont_allow, null);
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -345,10 +340,10 @@ public class SplashActivity extends AppCompatActivity {
         RPIRepository repoRPI = new RPIRepository(getApplicationContext());
         List<RPI> rpis = repoRPI.getLatestRPIs();
         ArrayList<byte[]> rpiArrayList = new ArrayList<>();
-        int result=1000;
+        int result = 1000;
 
         for (RPI rpi : rpis) {
-            byte[] rpiFromRoom = Identifier.parse(rpi.rpi,16).toByteArray();
+            byte[] rpiFromRoom = Identifier.parse(rpi.rpi, 16).toByteArray();
             rpiArrayList.add(rpiFromRoom);
         }
 
@@ -356,25 +351,24 @@ public class SplashActivity extends AppCompatActivity {
             //initialise GAEN variables based on fetched TEK and ENIN
 
 
-                //initialise GAEN variables based on fetched TEK and ENIN
+            //initialise GAEN variables based on fetched TEK and ENIN
 
-                byte[] TEKByteArray = Base64.decode(tek.getTek(), Base64.DEFAULT);
-                long ENIntervalNumber = tek.getEnIntervalNumber();
-                result = Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber,rpiArrayList);
-                if(result==1){
-                    Toast.makeText(this, "You have been in contact with a COVID positive case. Seek medical attention immediately!", Toast.LENGTH_LONG).show();
-                    break;
-                }
+            byte[] TEKByteArray = Base64.decode(tek.getTek(), Base64.DEFAULT);
+            long ENIntervalNumber = tek.getEnIntervalNumber();
+            result = Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber, rpiArrayList);
+            if (result == 1) {
+                Toast.makeText(this, "You have been in contact with a COVID positive case. Seek medical attention immediately!", Toast.LENGTH_LONG).show();
+                break;
+            }
 
-            }
-            Log.d("RESULT FROM UTILS", String.valueOf(result));
-            if(result==0 || result ==1000) {
-                Toast.makeText(this, "You are safe!", Toast.LENGTH_LONG).show();
-            }
-            else if(result==999){
-                Toast.makeText(this, "System Error", Toast.LENGTH_LONG).show();
+        }
+        Log.d("RESULT FROM UTILS", String.valueOf(result));
+        if (result == 0 || result == 1000) {
+            Toast.makeText(this, "You are safe!", Toast.LENGTH_LONG).show();
+        } else if (result == 999) {
+            Toast.makeText(this, "System Error", Toast.LENGTH_LONG).show();
 
-            }
+        }
 
     }
 
@@ -393,7 +387,7 @@ public class SplashActivity extends AppCompatActivity {
         RPIRepository repo = new RPIRepository(getApplicationContext());
         RPI rpi = repo.getLastRPI();
 
-        if (rpi==null)
+        if (rpi == null)
             Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + Arrays.toString(Identifier.parse(rpi.rpi, 16).toByteArray()), Toast.LENGTH_SHORT).show();
