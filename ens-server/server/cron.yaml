@@ -2,3 +2,4 @@ cron:
 - description: "daily deletion of older teks"
   url: /delete-old-teks
   schedule: every 5 hours
+  timezone: Australia/Adelaide
