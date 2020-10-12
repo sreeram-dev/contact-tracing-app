@@ -26,5 +26,7 @@
     <string name="enin_metric">Current ENIntervalNumber</string>
     <string name="server_metric">Server Metrics</string>
     <string name="dev_screen_disclaimer">Here you can see the Temporary Exposure Key, Rolling Proximity Identifier and ENIntervalNumber</string>
+    <string name="diagnose">Diagnose</string>
+    <string name="metrics">Metrics</string>
 
 </resources>
