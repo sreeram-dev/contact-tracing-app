@@ -208,6 +208,4 @@ public class SplashActivity extends AppCompatActivity {
         Intent localIntent = new Intent(SplashActivity.this, DiagnoseActivity.class);
         startActivity(localIntent);
     }
-
-
 }

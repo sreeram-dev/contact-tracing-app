@@ -1,7 +1,6 @@
 
 package com.project.covidguard.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +8,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,11 +16,6 @@ import android.widget.Toast;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
-import com.project.covidguard.data.entities.DownloadTEK;
-import com.project.covidguard.data.entities.RPI;
-import com.project.covidguard.data.repositories.RPIRepository;
-import com.project.covidguard.data.repositories.TEKRepository;
-import com.project.covidguard.gaen.Utils;
 import com.project.covidguard.tasks.DownloadTEKTask;
 import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
@@ -32,12 +25,8 @@ import com.project.covidguard.web.responses.RegisterUUIDResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
-import org.altbeacon.beacon.Identifier;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
@@ -157,10 +146,19 @@ public class DiagnoseActivity extends AppCompatActivity {
             .putString("TAN", "1234-5678")
             .build();
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
+        OneTimeWorkRequest submitTEKRequest = UploadTEKTask.getOneTimeRequestWithoutParams();
         wm.beginWith(RequestTANTask.getOneTimeRequest())
-            .then(UploadTEKTask.getOneTimeRequestWithoutParams())
+            .then(submitTEKRequest)
             .enqueue();
-        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
+
+        wm.getWorkInfoByIdLiveData(submitTEKRequest.getId()).observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                    Toast.makeText(getApplicationContext(), "Submitted TEK Successfully", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
     }
 
     public void clickMatchMaker(View view) {
@@ -191,8 +189,9 @@ public class DiagnoseActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            finish() ;// close this activity and return to preview activity (if there is any)
+            finish(); // close this activity and return to preview activity (if there is any)
         }
+
         return super.onOptionsItemSelected(item);
     }
 }
