@@ -33,6 +33,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.DiagnoseActivity"
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".activities.MetricsActivity"
+            android:screenOrientation="portrait"/>
         <service
             android:name=".ExposureKeyService"
             android:enabled="true"
