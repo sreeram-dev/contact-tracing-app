@@ -191,9 +191,6 @@ public class TEKRepository {
      */
     public void truncateDownloadTeksSync() {
         Log.d(LOG_TAG, "Truncating the downloadTEKs table");
-        List<DownloadTEK> teks = mDownloadedTEKDao.getAllDownloadedTEKS();
-        for (DownloadTEK tek: teks) {
-            mDownloadedTEKDao.delete(tek);
-        }
+        mDownloadedTEKDao.truncateTable();
     }
 }

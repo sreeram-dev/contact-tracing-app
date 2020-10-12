@@ -24,6 +24,7 @@ import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.gaen.Utils;
 import com.project.covidguard.tasks.DownloadTEKTask;
+import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
@@ -44,7 +45,10 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -160,43 +164,23 @@ public class DiagnoseActivity extends AppCompatActivity {
     }
 
     public void clickMatchMaker(View view) {
-        WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
+        OneTimeWorkRequest matchRequest = MatchMakerTask.getOneTimeRequest();
+        WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
-        TEKRepository repo = new TEKRepository(getApplicationContext());
-        List<DownloadTEK> teks = repo.getAllDownloadedTEKsSync();
-        RPIRepository repoRPI = new RPIRepository(getApplicationContext());
-        List<RPI> rpis = repoRPI.getLatestRPIs();
-        ArrayList<byte[]> rpiArrayList = new ArrayList<>();
-        int result = 1000;
+        wm.beginWith(DownloadTEKTask.getOneTimeRequest())
+            .then(matchRequest)
+            .enqueue();
 
-        for (RPI rpi : rpis) {
-            byte[] rpiFromRoom = Identifier.parse(rpi.rpi, 16).toByteArray();
-            rpiArrayList.add(rpiFromRoom);
-        }
-
-        for (DownloadTEK tek : teks) {
-            //initialise GAEN variables based on fetched TEK and ENIN
-
-
-            //initialise GAEN variables based on fetched TEK and ENIN
-
-            byte[] TEKByteArray = Base64.decode(tek.getTek(), Base64.DEFAULT);
-            long ENIntervalNumber = tek.getEnIntervalNumber();
-            result = Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber, rpiArrayList);
-            if (result == 1) {
-                Toast.makeText(this, "You have been in contact with a COVID positive case. Seek medical attention immediately!", Toast.LENGTH_LONG).show();
-                break;
-            }
-
-        }
-        Log.d("RESULT FROM UTILS", String.valueOf(result));
-        if (result == 0 || result == 1000) {
-            Toast.makeText(this, "You are safe!", Toast.LENGTH_LONG).show();
-        } else if (result == 999) {
-            Toast.makeText(this, "System Error", Toast.LENGTH_LONG).show();
-
-        }
-
+        wm.getWorkInfoByIdLiveData(matchRequest.getId())
+            .observe(this, new Observer<WorkInfo>() {
+                @Override
+                public void onChanged(WorkInfo workInfo) {
+                    if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                        String msg = workInfo.getOutputData().getString("message");
+                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
     }
 
     public void clickDeveloperMetricsHandler(View view) {

@@ -1,6 +1,7 @@
 package com.project.covidguard.tasks;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -10,6 +11,7 @@ import androidx.work.WorkRequest;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.web.responses.DownloadTEKResponse;
 import com.project.covidguard.web.responses.ErrorResponse;
@@ -32,8 +34,8 @@ public class DownloadTEKTask extends Worker {
         super(context, workerParams);
     }
 
-    public static WorkRequest getOneTimeRequest() {
-        WorkRequest request = new OneTimeWorkRequest.Builder(DownloadTEKTask.class).build();
+    public static OneTimeWorkRequest getOneTimeRequest() {
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(DownloadTEKTask.class).build();
         return request;
     }
 
@@ -41,6 +43,11 @@ public class DownloadTEKTask extends Worker {
     @Override
     public Result doWork() {
         tekRepo.truncateDownloadTeksSync();
+
+        deleteAndReset();
+        List<DownloadTEK> teks = tekRepo.getAllDownloadedTEKsSync();
+        Log.d(LOG_TAG, "downloaded teks size: " + teks.size());
+
         List<Pair<String, Long>> tekPairs = downloadInfectedTEK();
 
         if (tekPairs == null) {
@@ -50,8 +57,6 @@ public class DownloadTEKTask extends Worker {
         if (tekPairs.isEmpty()) {
             return Result.success();
         }
-
-
 
         Log.d(LOG_TAG, "Storing downloaded teks, size: " + tekPairs.size());
 
@@ -81,5 +86,14 @@ public class DownloadTEKTask extends Worker {
         }
 
         return null;
+    }
+
+    public void deleteAndReset() {
+        SQLiteDatabase database;
+        database = SQLiteDatabase.openOrCreateDatabase(getApplicationContext().getDatabasePath("covidguard"), null);
+        String deleteTable = "DELETE FROM downloaded_teks";
+        database.execSQL(deleteTable);
+        String deleteSqliteSequence = "DELETE FROM sqlite_sequence WHERE name = 'downloaded_teks'";
+        database.execSQL(deleteSqliteSequence);
     }
 }
