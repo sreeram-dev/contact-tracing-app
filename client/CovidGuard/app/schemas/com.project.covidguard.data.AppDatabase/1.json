@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "595fe46250fee342714b23384eb734be",
+    "identityHash": "55c722bd2dec7484e57598ca6f32ecc4",
     "entities": [
       {
         "tableName": "teks",
@@ -53,7 +53,7 @@
       },
       {
         "tableName": "rpis",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `rpi` TEXT, `aem` TEXT, `received_at` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `rpi` TEXT, `aem` TEXT, `rssi` REAL, `tx_power` INTEGER, `distance` REAL, `received_at` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -71,6 +71,24 @@
             "fieldPath": "aem",
             "columnName": "aem",
             "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rssi",
+            "columnName": "rssi",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "txPower",
+            "columnName": "tx_power",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "distance",
+            "columnName": "distance",
+            "affinity": "REAL",
             "notNull": false
           },
           {
@@ -143,7 +161,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '595fe46250fee342714b23384eb734be')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55c722bd2dec7484e57598ca6f32ecc4')"
     ]
   }
 }

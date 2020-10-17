@@ -12,19 +12,37 @@ import androidx.room.PrimaryKey;
 public class RPI {
 
     @PrimaryKey(autoGenerate = true)
-    public int id;
+    private int id;
 
     /**
      * RPI received from the user
      */
     @ColumnInfo(name = "rpi")
-    public String rpi;
+    private String rpi;
 
     /**
      * Store Associated Encrypted Metadata
      */
     @ColumnInfo(name = "aem")
-    public String aem;
+    private String aem;
+
+    /**
+     * Store the running average RSSI of the beacon
+     */
+    @ColumnInfo(name ="rssi")
+    private Double rssi;
+
+    /**
+     * Store the TxPower of the beacon
+     */
+    @ColumnInfo(name = "tx_power")
+    private Integer txPower;
+
+    /**
+     * Store the distance calculated by the beacon
+     */
+    @ColumnInfo(name = "distance")
+    private Double distance;
 
     /**
      * Store only the second precision value since epochs passed
@@ -39,18 +57,29 @@ public class RPI {
         this.receivedAt = epoch;
     }
 
-    public RPI(int id, String rpi, String aem, Long receivedAt) {
+    public RPI(int id, String rpi, String aem, Double rssi, Integer txPower, Double distance, Long receivedAt) {
         this.id = id;
         this.rpi = rpi;
         this.aem = aem;
+        this.rssi = rssi;
+        this.txPower = txPower;
+        this.distance = distance;
         this.receivedAt = receivedAt;
     }
 
-    public String getRPI() {
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getId() {
+        return this.id;
+    }
+
+    public String getRpi() {
         return this.rpi;
     }
 
-    public void setRPI(String rpi) {
+    public void setRpi(String rpi) {
         this.rpi = rpi;
     }
 
@@ -62,13 +91,29 @@ public class RPI {
         return this.aem;
     }
 
+    private void setReceivedAt(Long receivedAt) {
+        this.receivedAt = receivedAt;
+    }
+
     public Long getReceivedAt() {
         return this.receivedAt;
     }
 
-    public void setReceivedAt(Long receivedAt) {
-        this.receivedAt = receivedAt;
+    public void setTxPower(Integer txPower) {
+        this.txPower = txPower;
     }
 
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
 
+    public void setRssi(Double rssi) {
+        this.rssi = rssi;
+    }
+
+    public Integer getTxPower() { return this.txPower; }
+
+    public Double getDistance() { return this.distance; }
+
+    public Double getRssi() { return this.rssi; }
 }

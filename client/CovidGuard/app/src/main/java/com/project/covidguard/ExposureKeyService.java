@@ -131,11 +131,12 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
             if (beacons.size() != 0) {
                 Beacon beacon = Utils.getLastElement(beacons);
                 ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
-                rpiRepo.storeReceivedRPI(beacon.getId1().toString(), time.toEpochSecond());
+                rpiRepo.storeReceivedRPI(beacon.getId1().toString(), beacon.getRunningAverageRssi(),
+                    beacon.getDistance(), beacon.getTxPower(), time.toEpochSecond());
                 Log.d(LOG_TAG, "didRangeBeaconsInRegion: "
                         + "\nUUID: " + beacon.getId1()
                         + "\nTIME: " + time.toString()
-                        + "\nRSSI: " + beacon.getRssi()
+                        + "\nRSSI: " + beacon.getRunningAverageRssi()
                         + "\nTX: " + beacon.getTxPower()
                         + "\nDISTANCE: " + beacon.getDistance());
             }

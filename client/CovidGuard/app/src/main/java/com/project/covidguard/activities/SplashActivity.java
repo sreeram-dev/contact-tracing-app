@@ -18,6 +18,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.project.covidguard.R;
+import com.project.covidguard.StorageUtils;
 
 import org.altbeacon.beacon.BeaconManager;
 
@@ -27,6 +28,10 @@ import java.util.ArrayList;
 public class SplashActivity extends AppCompatActivity {
     private static final int PERMISSION_MAIN_REQUEST = 1;
     private static final int PERMISSION_REPEAT_REQUEST = 2;
+
+    private final String[] requiredPermissions =   new String[] {
+        Manifest.permission.ACCESS_FINE_LOCATION // manual permission required.
+    };
 
     private static final String LOG_TAG = SplashActivity.class.getName();
 
@@ -41,18 +46,24 @@ public class SplashActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkAndRequestPermissions();
         }
+
+        // If the token is registered with the verification server and location permission is granted,
+        // do not show let's get started.
+        if (StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG) &&
+            this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Intent localIntent = new Intent(SplashActivity.this, DiagnoseActivity.class);
+            // clear the backstack
+            localIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(localIntent);
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void checkAndRequestPermissions() {
-        String[] permissions = {
-            Manifest.permission.ACCESS_FINE_LOCATION // manual permission required.
-        };
-
         ArrayList<String> permissionsNeeded = new ArrayList<>();
 
         // Permissions needed
-        for (String permission : permissions) {
+        for (String permission : requiredPermissions) {
             if (this.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionsNeeded.add(permission);
             }

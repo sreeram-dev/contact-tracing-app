@@ -50,7 +50,7 @@ public class MatchMakerTask extends Worker {
         int result = 1000;
 
         for (RPI rpi : rpis) {
-            byte[] rpiFromRoom = Identifier.parse(rpi.rpi, 16).toByteArray();
+            byte[] rpiFromRoom = Identifier.parse(rpi.getRpi(), 16).toByteArray();
             rpiArrayList.add(rpiFromRoom);
         }
 

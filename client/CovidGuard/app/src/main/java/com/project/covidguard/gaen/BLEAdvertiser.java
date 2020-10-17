@@ -4,6 +4,7 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconParser;
@@ -54,6 +55,13 @@ public class BLEAdvertiser implements Observer {
                 .setId1(key)
                 .build();
 
+        switch(BeaconTransmitter.checkTransmissionSupported(this.context)) {
+            case BeaconTransmitter.NOT_SUPPORTED_BLE:
+                Log.d(LOG_TAG, "Cannot Advertise because BLE is not supported");
+                Toast.makeText(context, "Cannot advertise: BLE not supported", Toast.LENGTH_LONG).show();
+                return;
+        }
+
         // If the beacon transmitter has already been transmitting,
         // stop it and start again with the new beacon
         if (beaconTransmitter == null) {
@@ -62,6 +70,13 @@ public class BLEAdvertiser implements Observer {
             Log.d(BEACON_ADVERTISEMENT_TAG, "Stopping Advertisement of earlier key");
             beaconTransmitter.stopAdvertising();
         }
+
+        // Google exposure notifications uses ADVERTISE_TX_POWER_LOW and LOW_POWER ADVERTISING MODE
+        // Setting the power level to power low and advertising mode to low power
+        // After the calibration profiles are available, maybe we can set custom power
+        // levels to detect within 2m.
+        beaconTransmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW);
+        beaconTransmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
 
         beaconTransmitter.startAdvertising(beacon, new AdvertiseCallback() {
             @Override

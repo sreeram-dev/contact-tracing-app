@@ -52,12 +52,15 @@ public class MetricsActivity extends AppCompatActivity {
         RPIRepository repo = new RPIRepository(getApplicationContext());
         RPI rpi = repo.getLastRPI();
 
-        if (rpi == null)
+        if (rpi == null) {
             Toast.makeText(getApplicationContext(), "No RPI is currently being received", Toast.LENGTH_SHORT).show();
-        else
-            Toast.makeText(getApplicationContext(), "Current anonymised RPI being received is: " + Arrays.toString(Identifier.parse(rpi.rpi, 16).toByteArray()), Toast.LENGTH_SHORT).show();
-
-
+        }
+        else {
+            Toast.makeText(
+                getApplicationContext(), "Current anonymised RPI being received is: " +
+                    Arrays.toString(Identifier.parse(rpi.getRpi(), 16).toByteArray()),
+                Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void clickENINMetric(View view) {

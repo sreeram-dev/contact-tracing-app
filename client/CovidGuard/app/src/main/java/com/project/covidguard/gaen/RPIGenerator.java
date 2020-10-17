@@ -52,6 +52,7 @@ public class RPIGenerator extends Observable implements Runnable {
 
         byte[] TEK;
         Long tekENIN;
+
         if (tek == null || presentENIN - tek.getEnIntervalNumber() >= TEK_INTERVAL) {
             TEK = secureRandom.generateSeed(16);
             String encodedTek = android.util.Base64.encodeToString(TEK, Base64.DEFAULT);
