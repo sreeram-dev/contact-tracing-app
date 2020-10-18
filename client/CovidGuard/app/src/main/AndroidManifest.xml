@@ -37,6 +37,9 @@
             android:name=".activities.DiagnoseActivity"
             android:screenOrientation="portrait"/>
         <activity
+            android:name=".activities.Terms"
+            android:screenOrientation="portrait"/>
+        <activity
             android:name=".activities.MetricsActivity"
             android:screenOrientation="portrait"/>
         <service

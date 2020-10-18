@@ -204,6 +204,12 @@ public class DiagnoseActivity extends AppCompatActivity {
         startActivity(localIntent);
     }
 
+    public void clickTerms(View view) {
+        Intent localIntent = new Intent(DiagnoseActivity.this, Terms.class);
+        startActivity(localIntent);
+    }
+
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
