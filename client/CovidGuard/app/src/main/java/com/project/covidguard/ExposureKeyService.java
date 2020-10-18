@@ -1,10 +1,12 @@
 package com.project.covidguard;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -15,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
+import com.project.covidguard.activities.DiagnoseActivity;
 import com.project.covidguard.activities.SplashActivity;
 import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.gaen.BLEAdvertiser;
@@ -107,6 +110,14 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
                 new RPIGenerator(secureRandom, getApplicationContext(), rpiObservers), 0, RPI_INTERVAL, RPI_TIME_UNIT);
 
         Intent notificationIntent = new Intent(this, SplashActivity.class);
+
+        // If the token is registered with the verification server and location permission is granted,
+        // do not show let's get started.
+        if (StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG) &&
+            this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            notificationIntent = new Intent(this, DiagnoseActivity.class);
+        }
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
