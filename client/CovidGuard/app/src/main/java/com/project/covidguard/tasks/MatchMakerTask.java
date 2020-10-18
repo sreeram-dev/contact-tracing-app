@@ -28,7 +28,6 @@ public class MatchMakerTask extends Worker {
 
 
     private static final String LOG_TAG = MatchMakerTask.class.getCanonicalName();
-    private final TEKRepository tekRepo = new TEKRepository(getApplicationContext());
 
     public MatchMakerTask(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);

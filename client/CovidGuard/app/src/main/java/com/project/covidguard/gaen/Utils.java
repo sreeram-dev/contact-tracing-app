@@ -93,7 +93,7 @@ public class Utils {
         byte[] RPIKey = getRPIKeyFromTEK(TEK);
         SecretKeySpec aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
         Cipher cipher;
-        long ENIntervalNumberLimit = ENIN +10;
+        long ENIntervalNumberLimit = ENIN + 10;
 
         try {
             cipher = Cipher.getInstance("AES/ECB/NoPadding");

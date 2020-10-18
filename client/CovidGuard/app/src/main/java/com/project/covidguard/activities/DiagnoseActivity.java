@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
+import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.tasks.DownloadTEKTask;
 import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
@@ -28,6 +29,7 @@ import com.project.covidguard.web.services.VerificationService;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -35,7 +37,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
+import androidx.work.BackoffPolicy;
+import androidx.work.Constraints;
 import androidx.work.Data;
+import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
@@ -146,12 +151,29 @@ public class DiagnoseActivity extends AppCompatActivity {
             .putString("TAN", "1234-5678")
             .build();
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
-        OneTimeWorkRequest submitTEKRequest = UploadTEKTask.getOneTimeRequestWithoutParams();
-        wm.beginWith(RequestTANTask.getOneTimeRequest())
-            .then(submitTEKRequest)
+
+        Constraints constraints = new Constraints.Builder()
+            .setRequiresBatteryNotLow(true)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build();
+
+        OneTimeWorkRequest tanRequest = new OneTimeWorkRequest.Builder(RequestTANTask.class)
+            .setConstraints(constraints)
+            .addTag(RequestTANTask.TAG)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+            .build();
+
+        OneTimeWorkRequest uploadTEKRequest = new OneTimeWorkRequest.Builder(UploadTEKTask.class)
+            .setConstraints(constraints)
+            .addTag(UploadTEKTask.TAG)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+            .build();
+
+        wm.beginWith(tanRequest)
+            .then(uploadTEKRequest)
             .enqueue();
 
-        wm.getWorkInfoByIdLiveData(submitTEKRequest.getId()).observe(this, new Observer<WorkInfo>() {
+        wm.getWorkInfoByIdLiveData(uploadTEKRequest.getId()).observe(this, new Observer<WorkInfo>() {
             @Override
             public void onChanged(WorkInfo workInfo) {
                 if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
@@ -165,7 +187,19 @@ public class DiagnoseActivity extends AppCompatActivity {
         OneTimeWorkRequest matchRequest = MatchMakerTask.getOneTimeRequest();
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
-        wm.beginWith(DownloadTEKTask.getOneTimeRequest())
+        Constraints constraints = new Constraints.Builder()
+            .setRequiresBatteryNotLow(true)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build();
+
+        OneTimeWorkRequest downloadRequest = new OneTimeWorkRequest.Builder(DownloadTEKTask.class)
+            .setConstraints(constraints)
+            .addTag(DownloadTEKTask.TAG)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+            .build();
+
+
+        wm.beginWith(downloadRequest)
             .then(matchRequest)
             .enqueue();
 

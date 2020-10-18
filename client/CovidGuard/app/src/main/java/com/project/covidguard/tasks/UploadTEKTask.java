@@ -32,27 +32,23 @@ public class UploadTEKTask extends Worker {
 
     private static final String LOG_TAG = UploadTEKTask.class.getCanonicalName();
     private final ZoneId zoneId = ZoneId.systemDefault();
+    public static final String TAG = "UploadTEKTask";
+    private final Integer MAX_ATTEMPTS = 5;
 
 
     public UploadTEKTask(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
 
-    public static WorkRequest getOneTimeRequest(Data data) {
-        WorkRequest request = new OneTimeWorkRequest.Builder(UploadTEKTask.class)
-            .setInputData(data)
-            .build();
-        return request;
-    }
-
-    public static OneTimeWorkRequest getOneTimeRequestWithoutParams() {
-        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(UploadTEKTask.class).build();
-        return request;
-    }
-
     @NonNull
     @Override
     public Result doWork() {
+
+        if (this.getRunAttemptCount() > MAX_ATTEMPTS) {
+            Log.e(LOG_TAG, "Failed to upload TEKs");
+
+            return Result.failure();
+        }
 
         String TAN = getInputData().getString("TAN");
         if (TAN == null || TAN.equals("") || TAN.isEmpty()) {
@@ -76,28 +72,29 @@ public class UploadTEKTask extends Worker {
             return Result.failure();
         }
 
-        uploadDiagnosisKeys(TAN, TEKs, present);
+        try {
+            uploadDiagnosisKeys(TAN, TEKs, present);
+        } catch (IOException ex) { // if the request failed retry again
+            return Result.retry();
+        }
 
         return Result.success();
     }
 
-    private void uploadDiagnosisKeys(String tan, List<TEK> teks, Long present) {
+    private void uploadDiagnosisKeys(String tan, List<TEK> teks, Long present) throws IOException {
         DiagnosisServerInterface service = ExposureNotificationService.getService();
         UploadTEKRequest request = UploadTEKRequest.buildRequest(tan, teks);
         Call<UploadDiagnosisKeyResponse> call = service.uploadTEKs(request);
-        try {
-            Response<UploadDiagnosisKeyResponse> retrofitResponse = call.execute();
-            if (retrofitResponse.isSuccessful()) {
-                UploadDiagnosisKeyResponse response = retrofitResponse.body();
-                Log.d(LOG_TAG, "Upload successful msg: " + response.toString());
-                storeLastUploadTimeStamp(present);
-            } else {
-                ErrorResponse response = ErrorResponse.buildFromSource(retrofitResponse.errorBody().source());
-                Log.e(LOG_TAG, "Upload Failed err: " + response.toString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(LOG_TAG, "Response failed");
+        Response<UploadDiagnosisKeyResponse> retrofitResponse = call.execute();
+        if (retrofitResponse.isSuccessful()) {
+            UploadDiagnosisKeyResponse response = retrofitResponse.body();
+            Log.d(LOG_TAG, "Upload successful msg: " + response.toString());
+            storeLastUploadTimeStamp(present);
+        } else {
+            ErrorResponse response = ErrorResponse.buildFromSource(retrofitResponse.errorBody().source());
+            Log.e(LOG_TAG, "Upload Failed err: " + response.toString());
+            throw new IOException("Upload failed err: " + response.toString());
+
         }
     }
 
