@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "55c722bd2dec7484e57598ca6f32ecc4",
+    "identityHash": "31f3f87aa409d4595fc8b7a8e156bb33",
     "entities": [
       {
         "tableName": "teks",
@@ -115,53 +115,12 @@
           }
         ],
         "foreignKeys": []
-      },
-      {
-        "tableName": "downloaded_teks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tek` TEXT, `en_interval_number` INTEGER)",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "tek",
-            "columnName": "tek",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "enIntervalNumber",
-            "columnName": "en_interval_number",
-            "affinity": "INTEGER",
-            "notNull": false
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": true
-        },
-        "indices": [
-          {
-            "name": "index_downloaded_teks_tek",
-            "unique": true,
-            "columnNames": [
-              "tek"
-            ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_downloaded_teks_tek` ON `${TABLE_NAME}` (`tek`)"
-          }
-        ],
-        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55c722bd2dec7484e57598ca6f32ecc4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '31f3f87aa409d4595fc8b7a8e156bb33')"
     ]
   }
 }

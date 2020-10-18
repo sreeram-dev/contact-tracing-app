@@ -85,6 +85,7 @@ dependencies {
 
     // WorkManager for scheduling upload of TEKs
     implementation "androidx.work:work-runtime:$work_version"
+    implementation "androidx.lifecycle:lifecycle-service:2.2.0"
 
     // For debugging through chrome
     implementation 'com.facebook.stetho:stetho:1.5.1'

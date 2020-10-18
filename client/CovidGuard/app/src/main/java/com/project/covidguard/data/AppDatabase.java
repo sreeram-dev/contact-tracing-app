@@ -8,10 +8,8 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-import com.project.covidguard.data.dao.DownloadTEKDao;
 import com.project.covidguard.data.dao.RPIDao;
 import com.project.covidguard.data.dao.TEKDao;
-import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.data.entities.RPI;
 import com.project.covidguard.data.entities.TEK;
 
@@ -21,7 +19,7 @@ import com.project.covidguard.data.entities.TEK;
  * <RPI> </RPI>
  *
  */
-@Database(entities = {TEK.class, RPI.class, DownloadTEK.class}, version = 1)
+@Database(entities = {TEK.class, RPI.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String LOG_TAG = AppDatabase.class.getSimpleName();
     private static final Object LOCK = new Object();
@@ -43,5 +41,4 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract RPIDao rpiDao();
     public abstract TEKDao tekDao();
-    public abstract DownloadTEKDao downloadTEKDao();
 }

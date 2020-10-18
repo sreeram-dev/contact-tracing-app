@@ -16,8 +16,7 @@ import android.widget.Toast;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
-import com.project.covidguard.data.entities.DownloadTEK;
-import com.project.covidguard.tasks.DownloadTEKTask;
+import com.project.covidguard.gaen.Utils;
 import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
@@ -35,6 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.work.BackoffPolicy;
@@ -48,10 +48,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-
 public class DiagnoseActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DiagnoseActivity.class.getName();
+    public static final Integer POSITIVE_CONTACT_NOTIFICATION_ID = 2;
 
     Toolbar mTopToolbar;
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -147,24 +147,19 @@ public class DiagnoseActivity extends AppCompatActivity {
     }
 
     public void clickSubmitHandler(View view) {
-        Data data = new Data.Builder()
-            .putString("TAN", "1234-5678")
-            .build();
+        if (!isNetworkAvailable()) {
+            Toast.makeText(getApplicationContext(),  "Network is not available!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
-        Constraints constraints = new Constraints.Builder()
-            .setRequiresBatteryNotLow(true)
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build();
-
         OneTimeWorkRequest tanRequest = new OneTimeWorkRequest.Builder(RequestTANTask.class)
-            .setConstraints(constraints)
             .addTag(RequestTANTask.TAG)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
             .build();
 
         OneTimeWorkRequest uploadTEKRequest = new OneTimeWorkRequest.Builder(UploadTEKTask.class)
-            .setConstraints(constraints)
             .addTag(UploadTEKTask.TAG)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
             .build();
@@ -184,36 +179,39 @@ public class DiagnoseActivity extends AppCompatActivity {
     }
 
     public void clickMatchMaker(View view) {
-        OneTimeWorkRequest matchRequest = MatchMakerTask.getOneTimeRequest();
+
+        if (!isNetworkAvailable()) {
+            Toast.makeText(getApplicationContext(),  "Network is not available!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
-        Constraints constraints = new Constraints.Builder()
-            .setRequiresBatteryNotLow(true)
-            .setRequiredNetworkType(NetworkType.CONNECTED)
+        OneTimeWorkRequest matchRequest = new OneTimeWorkRequest.Builder(MatchMakerTask.class)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 2, TimeUnit.MINUTES)
             .build();
 
-        OneTimeWorkRequest downloadRequest = new OneTimeWorkRequest.Builder(DownloadTEKTask.class)
-            .setConstraints(constraints)
-            .addTag(DownloadTEKTask.TAG)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
-            .build();
-
-
-        wm.beginWith(downloadRequest)
-            .then(matchRequest)
-            .enqueue();
+        wm.enqueue(matchRequest);
 
         wm.getWorkInfoByIdLiveData(matchRequest.getId())
             .observe(this, new Observer<WorkInfo>() {
                 @Override
                 public void onChanged(WorkInfo workInfo) {
                     if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                        String msg = workInfo.getOutputData().getString("message");
+                        Data data = workInfo.getOutputData();
+                        String msg = data.getString("message");
+                        Boolean isPositive = data.getBoolean("is_positive", false);
+                        if (!isPositive) {
+                            // if there is a positive contact notification, cancel it if launched by exposure key service
+                            NotificationManagerCompat manager =  NotificationManagerCompat.from(getApplicationContext());
+                            manager.cancel(DiagnoseActivity.POSITIVE_CONTACT_NOTIFICATION_ID);
+                        }
                         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
                     }
                 }
             });
     }
+
 
     public void clickDeveloperMetricsHandler(View view) {
         Intent localIntent = new Intent(DiagnoseActivity.this, MetricsActivity.class);

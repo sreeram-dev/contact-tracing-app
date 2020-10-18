@@ -4,13 +4,9 @@ import android.content.Context;
 
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
-
 import com.project.covidguard.AppExecutors;
 import com.project.covidguard.data.AppDatabase;
-import com.project.covidguard.data.dao.DownloadTEKDao;
 import com.project.covidguard.data.dao.TEKDao;
-import com.project.covidguard.data.entities.DownloadTEK;
 import com.project.covidguard.data.entities.TEK;
 
 import java.util.List;
@@ -29,7 +25,6 @@ public class TEKRepository {
     private final ZoneId zoneId = ZoneId.systemDefault();
 
     private TEKDao mTekDao;
-    private DownloadTEKDao mDownloadedTEKDao;
 
     private final AppExecutors executors = AppExecutors.getInstance();
 
@@ -37,7 +32,6 @@ public class TEKRepository {
         AppDatabase db = AppDatabase.getDatabase(context);
         Log.d(LOG_TAG, "Is Database open: " + db.isOpen());
         mTekDao = db.tekDao();
-        mDownloadedTEKDao = db.downloadTEKDao();
     }
 
 
@@ -155,42 +149,5 @@ public class TEKRepository {
         }
 
         return null;
-    }
-
-    /**
-     * get all downloaded teks
-     */
-    public List<DownloadTEK> getAllDownloadedTEKsSync() {
-        List<DownloadTEK> teks;
-
-        Future<List<DownloadTEK>> future = executors.diskIO().submit(
-                () -> mDownloadedTEKDao.getAllDownloadedTEKS());
-
-        try {
-            teks = future.get();
-        } catch(Exception ex) {
-            ex.printStackTrace();
-            teks = null;
-        }
-
-        return teks;
-    }
-
-    /**
-     *
-     * @param tekString
-     * @param enIntervalNumber
-     */
-    public void storeDownloadedTEKWithEnIntervalNumber(String tekString, Long enIntervalNumber) {
-        DownloadTEK tek = new DownloadTEK(tekString, enIntervalNumber);
-        executors.diskIO().submit(() -> mDownloadedTEKDao.insert(tek));
-    }
-
-    /**
-     * Truncates the downloaded tek repository
-     */
-    public void truncateDownloadTeksSync() {
-        Log.d(LOG_TAG, "Truncating the downloadTEKs table");
-        mDownloadedTEKDao.truncateTable();
     }
 }
