@@ -1,5 +1,6 @@
 package com.project.covidguard.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 
@@ -25,6 +26,10 @@ public class Terms extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
 
+    }
+    public void clickBarcode(View view) {
+        Intent localIntent = new Intent(Terms.this, Barcode.class);
+        startActivity(localIntent);
     }
 
     @Override
