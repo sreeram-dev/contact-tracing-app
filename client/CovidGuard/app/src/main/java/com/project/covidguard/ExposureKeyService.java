@@ -65,7 +65,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     private static final String LOG_TAG = ExposureKeyService.class.getCanonicalName();
 
     private AppExecutors executors;
-    static SecureRandom secureRandom;
+   public static SecureRandom secureRandom;
 
     RPIRepository rpiRepo;
     BeaconManager beaconManager;

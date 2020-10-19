@@ -3,7 +3,7 @@ package com.project.covidguard.activities;
 import android.os.Bundle;
 
 
-
+import com.project.covidguard.ExposureKeyService;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -49,7 +49,7 @@ LinearLayout l = new LinearLayout(this);
         setContentView(l);
 
         // barcode data
-        String barcode_data = "lokesh";
+        String barcode_data ;
 
         // barcode image
         Bitmap bitmap = null;
@@ -57,7 +57,7 @@ LinearLayout l = new LinearLayout(this);
 
         try {
 
-            bitmap = encodeAsBitmap(barcode_data, BarcodeFormat.CODE_128, 1000, 500);
+            bitmap = encodeAsBitmap(ExposureKeyService.secureRandom.toString(), BarcodeFormat.CODE_128, 1000, 500);
             iv.setImageBitmap(bitmap);
 
         } catch (WriterException e) {
