@@ -1,15 +1,8 @@
-package com.project.covidguard.web.responses;
+package com.project.covidguard.web.responses.verification;
 
-import com.squareup.moshi.FromJson;
 import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonClass;
-import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.Moshi;
-import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
-
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.format.DateTimeFormatter;
 
 import java.util.Date;
 

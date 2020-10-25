@@ -1,4 +1,4 @@
-package com.project.covidguard.web.responses;
+package com.project.covidguard.web.responses.ens;
 
 import androidx.core.util.Pair;
 

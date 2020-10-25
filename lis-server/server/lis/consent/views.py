@@ -5,14 +5,17 @@ from flask import flash, request, url_for, redirect, render_template
 from flask import jsonify
 from flask.views import MethodView
 
-from lis.patient.services import PatientService
-from lis.patient.errors import ValidationError
+from lis.utils import validate_host
+from lis.patient.errors import PatientNotFound
+
+from lis.consent.services import ConsentService
+from lis.consent.errors import ConsentNotFound
 
 
-class RegistrationView(MethodView):
+class GrantConsentView(MethodView):
     """
     """
-    patient_service = PatientService()
+    consent_service = ConsentService()
 
     def _validate_request(self, request):
         """Validate the request
@@ -26,16 +29,15 @@ class RegistrationView(MethodView):
             raise ValueError(
                 'UUID Format is wrong - should be 16-32 characters')
 
-        if self.patient_service.find_by_uuid(uuid):
-            raise ValueError('UUID already exists uuid: ' + uuid)
+        host = request.form.get('host', None)
+        if host:
+            validate_host(host)
 
     def post(self):
-        """
-        """
 
         try:
             self._validate_request(request)
-        except ValueError as e:
+        except (ValueError, KeyError) as e:
             data = {
                 'code': 400,
                 'name': 'LIS/PatientService',
@@ -45,32 +47,39 @@ class RegistrationView(MethodView):
             return jsonify(data), 400
 
         uuid = request.form.get('uuid')
+        host = request.form.get('host', None)
+        if not host:
+            host = request.remote_addr
+        try:
+            consent = self.consent_service.grant_consent(uuid, host)
+        except PatientNotFound as e:
+            data = {
+                'code': 400,
+                'name': 'LIS/PatientService',
+                'description': str(e)
+            }
 
-        profile = self.patient_service.register_uuid(uuid)
+            return jsonify(data), 400
 
         data = {
             'success': True,
-            'message': 'Patient Successfully registered',
-            'profile': profile.to_dict()
+            'message': 'Consent Successfully granted',
+            'consent': consent.to_dict()
         }
 
         return jsonify(data), 200
 
 
-class DiagnosisView(MethodView):
-    """Set if the patient is diagnoised
+class RevokeConsentView(MethodView):
     """
-    patient_service = PatientService()
+    """
+    consent_service = ConsentService()
 
     def _validate_request(self, request):
         """Validate the request
         """
-        if not request.is_json:
-            raise ValueError('JSON Request is expected')
 
-        json_data = request.get_json()
-        uuid = json_data.get('uuid', None)
-
+        uuid = request.form.get('uuid', None)
         if uuid is None:
             raise KeyError('UUID param is required')
 
@@ -78,60 +87,57 @@ class DiagnosisView(MethodView):
             raise ValueError(
                 'UUID Format is wrong - should be 16-32 characters')
 
-        profile = self.patient_service.find_by_uuid(uuid)
-        if not profile:
-            raise ValueError('UUID does not exist. uuid: ' + uuid)
+        host = request.form.get('host', None)
+        if host:
+            validate_host(host)
 
     def post(self):
-        """Set is-positive or is-recovered for the user
-        """
 
         try:
             self._validate_request(request)
-        except (KeyError, ValueError) as e:
+        except ValueError | KeyError as e:
             data = {
                 'code': 400,
                 'name': 'LIS/PatientService',
                 'description': str(e)
             }
+
             return jsonify(data), 400
 
-        json_data = request.get_json()
-        uuid = json_data.get('uuid')
-
-        recovered_status = json_data.get('is-recovered', None)
-        positive_status = json_data.get('is-positive', None)
+        uuid = request.form.get('uuid')
+        host = request.form.get('host', None)
+        if not host:
+            host = request.remote_addr
 
         try:
-            self.patient_service.set_diagnosis_status(
-                uuid, recovered_status, positive_status)
-        except ValidationError as e:
+            consent = self.consent_service.revoke_consent(uuid, host)
+        except (PatientNotFound, ConsentNotFound) as e:
             data = {
                 'code': 400,
                 'name': 'LIS/PatientService',
                 'description': str(e)
             }
-            return jsonify(data), 400
 
-        profile = self.patient_service.find_by_uuid(uuid)
+            return jsonify(data), 400
 
         data = {
             'success': True,
-            'message': 'Patient has been successfully diagnosed',
-            'profile': profile.to_dict()
+            'message': 'Consent Successfully Revoked',
+            'consent': consent.to_dict()
         }
 
         return jsonify(data), 200
 
 
-class StatusView(MethodView):
-    """Get the status of the patient
+class AuthenticateConsentView(MethodView):
     """
-    patient_service = PatientService()
+    """
+    consent_service = ConsentService()
 
     def _validate_request(self, request):
         """Validate the request
         """
+
         uuid = request.args.get('uuid', None)
         if uuid is None:
             raise KeyError('UUID param is required')
@@ -140,29 +146,43 @@ class StatusView(MethodView):
             raise ValueError(
                 'UUID Format is wrong - should be 16-32 characters')
 
-        if not self.patient_service.find_by_uuid(uuid):
-            raise ValueError('UUID does not exist. uuid: ' + uuid)
+        host = request.form.get('host', None)
+        if host:
+            validate_host(host)
 
     def get(self):
-        """
-        """
+
         try:
             self._validate_request(request)
-        except (KeyError, ValueError) as e:
+        except ValueError | KeyError as e:
             data = {
                 'code': 400,
                 'name': 'LIS/PatientService',
                 'description': str(e)
             }
+
             return jsonify(data), 400
 
-        uuid = request.args.get('uuid')
+        uuid = request.args.get('uuid', None)
+        host = request.args.get('host', None)
+        if not host:
+            host = request.remote_addr
 
-        profile = self.patient_service.find_by_uuid(uuid)
+        try:
+            consent = self.consent_service.authenticate_consent(uuid, host)
+        except (PatientNotFound, ConsentNotFound) as e:
+            data = {
+                'code': 400,
+                'name': 'LIS/PatientService',
+                'description': str(e)
+            }
+
+            return jsonify(data), 400
 
         data = {
             'success': True,
-            'profile': profile.to_dict()
+            'message': 'Consent is valid',
+            'consent': consent.to_dict()
         }
 
         return jsonify(data), 200

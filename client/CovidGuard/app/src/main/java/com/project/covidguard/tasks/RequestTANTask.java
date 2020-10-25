@@ -15,23 +15,13 @@ import androidx.work.WorkerParameters;
 
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
-import com.project.covidguard.data.entities.TEK;
-import com.project.covidguard.data.repositories.TEKRepository;
-import com.project.covidguard.web.requests.UploadTEKRequest;
 import com.project.covidguard.web.responses.ErrorResponse;
-import com.project.covidguard.web.responses.RequestTANResponse;
-import com.project.covidguard.web.responses.UploadDiagnosisKeyResponse;
-import com.project.covidguard.web.services.DiagnosisServerInterface;
-import com.project.covidguard.web.services.ExposureNotificationService;
+import com.project.covidguard.web.responses.verification.RequestTANResponse;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.ZoneId;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;

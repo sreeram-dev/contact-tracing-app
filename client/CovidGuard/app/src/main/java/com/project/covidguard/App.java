@@ -65,7 +65,10 @@ public class App extends Application {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             Security.insertProviderAt(Conscrypt.newProvider(), 1);
         }
+
         createNotificationChannel();
+
+
     }
 
     private void createNotificationChannel() {

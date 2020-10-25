@@ -21,8 +21,19 @@ import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
 
 import org.altbeacon.beacon.BeaconManager;
+import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.lis.RegisterPatientResponse;
+import com.project.covidguard.web.services.LISServerInterface;
+import com.project.covidguard.web.services.LISService;
+
+
+import java.io.IOException;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class SplashActivity extends AppCompatActivity {
@@ -218,5 +229,34 @@ public class SplashActivity extends AppCompatActivity {
     public void clickRegistrationHandler(View view) {
         Intent localIntent = new Intent(SplashActivity.this, DiagnoseActivity.class);
         startActivity(localIntent);
+    }
+
+    private void registerWithLISServer(String uuid) {
+        LISServerInterface service = LISService.getService();
+
+        Call<RegisterPatientResponse> call = service.registerPatient(uuid);
+
+        call.enqueue(new Callback<RegisterPatientResponse>() {
+            @Override
+            public void onResponse(Call<RegisterPatientResponse> call, Response<RegisterPatientResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterPatientResponse res = response.body();
+                    StorageUtils.storePatientDetails(getApplicationContext(), res.getId());
+                    Log.d(LOG_TAG, "Patient Registered Successfully: res: " + res.toString());
+                } else {
+                    try {
+                        ErrorResponse err = ErrorResponse.buildFromSource(response.errorBody().source());
+                        Log.d(LOG_TAG, "Patient Registration Failed: err: " + err.toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterPatientResponse> call, Throwable t) {
+                Log.d(LOG_TAG, "Request to LIS Server failed");
+            }
+        });
     }
 }

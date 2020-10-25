@@ -15,7 +15,7 @@ import com.project.covidguard.data.entities.TEK;
 import com.project.covidguard.data.repositories.TEKRepository;
 import com.project.covidguard.web.requests.UploadTEKRequest;
 import com.project.covidguard.web.responses.ErrorResponse;
-import com.project.covidguard.web.responses.UploadDiagnosisKeyResponse;
+import com.project.covidguard.web.responses.ens.UploadDiagnosisKeyResponse;
 import com.project.covidguard.web.services.DiagnosisServerInterface;
 import com.project.covidguard.web.services.ExposureNotificationService;
 

@@ -1,20 +1,11 @@
 package com.project.covidguard.gaen;
 
 import android.util.Log;
-import androidx.core.util.Pair;
-
-import com.project.covidguard.web.responses.DownloadTEKResponse;
-import com.project.covidguard.web.responses.ErrorResponse;
-import com.project.covidguard.web.services.DiagnosisServerInterface;
-import com.project.covidguard.web.services.ExposureNotificationService;
-
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -23,9 +14,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 import at.favre.lib.crypto.HKDF;
-import retrofit2.Call;
-import retrofit2.Response;
-
 
 public class Utils {
     private static final String LOG_TAG = Utils.class.getCanonicalName();

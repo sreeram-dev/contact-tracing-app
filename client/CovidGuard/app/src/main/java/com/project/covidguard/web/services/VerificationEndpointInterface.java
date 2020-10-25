@@ -1,7 +1,7 @@
 package com.project.covidguard.web.services;
 
-import com.project.covidguard.web.responses.RegisterUUIDResponse;
-import com.project.covidguard.web.responses.RequestTANResponse;
+import com.project.covidguard.web.responses.verification.RegisterUUIDResponse;
+import com.project.covidguard.web.responses.verification.RequestTANResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Field;

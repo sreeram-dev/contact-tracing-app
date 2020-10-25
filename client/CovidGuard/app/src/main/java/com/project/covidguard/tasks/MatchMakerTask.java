@@ -13,8 +13,8 @@ import androidx.work.WorkerParameters;
 import com.project.covidguard.data.entities.RPI;
 import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.gaen.Utils;
-import com.project.covidguard.web.responses.DownloadTEKResponse;
 import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.ens.DownloadTEKResponse;
 import com.project.covidguard.web.services.DiagnosisServerInterface;
 import com.project.covidguard.web.services.ExposureNotificationService;
 
