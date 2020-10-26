@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,7 +21,10 @@ import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.lis.RegisterPatientResponse;
 import com.project.covidguard.web.responses.verification.RegisterUUIDResponse;
+import com.project.covidguard.web.services.LISServerInterface;
+import com.project.covidguard.web.services.LISService;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
@@ -33,11 +37,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
+import androidx.work.Data;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.lifecycle.Observer;
 import androidx.work.BackoffPolicy;
-import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
@@ -63,6 +67,7 @@ public class DiagnoseActivity extends AppCompatActivity {
 
         if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
             generateAndStoreToken(uuid);
+            registerWithLISServer(uuid);
         } else {
             Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
         }
@@ -209,18 +214,51 @@ public class DiagnoseActivity extends AppCompatActivity {
             });
     }
 
-
     public void clickDeveloperMetricsHandler(View view) {
         Intent localIntent = new Intent(DiagnoseActivity.this, MetricsActivity.class);
         startActivity(localIntent);
     }
 
+    public void clickTerms(View view) {
+        Intent localIntent = new Intent(DiagnoseActivity.this, Terms.class);
+        startActivity(localIntent);
+    }
+
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            finish(); // close this activity and return to preview activity (if there is any)
+            finish() ;// close this activity and return to preview activity (if there is any)
         }
-
         return super.onOptionsItemSelected(item);
+    }
+
+    private void registerWithLISServer(String uuid) {
+        LISServerInterface service = LISService.getService();
+
+        Call<RegisterPatientResponse> call = service.registerPatient(uuid);
+
+        call.enqueue(new Callback<RegisterPatientResponse>() {
+            @Override
+            public void onResponse(Call<RegisterPatientResponse> call, Response<RegisterPatientResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterPatientResponse res = response.body();
+                    StorageUtils.storePatientDetails(getApplicationContext(), res.getId());
+                    Log.d(LOG_TAG, "Patient Registered Successfully: res: " + res.toString());
+                } else {
+                    try {
+                        ErrorResponse err = ErrorResponse.buildFromSource(response.errorBody().source());
+                        Log.d(LOG_TAG, "Patient Registration Failed: err: " + err.toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterPatientResponse> call, Throwable t) {
+                Log.d(LOG_TAG, "Request to LIS Server failed");
+            }
+        });
     }
 }

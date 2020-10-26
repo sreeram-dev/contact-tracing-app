@@ -76,6 +76,4 @@ public class MetricsActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-
 }

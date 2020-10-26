@@ -85,7 +85,7 @@ public class ExposureKeyService extends  LifecycleService  implements BeaconCons
     private static final String LOG_TAG = ExposureKeyService.class.getCanonicalName();
 
     private AppExecutors executors;
-    static SecureRandom secureRandom;
+   public static SecureRandom secureRandom;
 
     RPIRepository rpiRepo;
     BeaconManager beaconManager;
