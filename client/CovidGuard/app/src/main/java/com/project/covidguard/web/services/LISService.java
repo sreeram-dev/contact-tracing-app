@@ -6,6 +6,7 @@ import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
 
 import java.util.Date;
 
+import okhttp3.CertificatePinner;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
@@ -15,7 +16,13 @@ public class LISService {
 
     public static LISServerInterface getService() {
         if (retrofit == null) {
+            CertificatePinner pinner = new CertificatePinner.Builder()
+                .add("*.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
+                .add("lis-server-289906.ts.r.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
+                .build();
+
             OkHttpClient client = new OkHttpClient.Builder()
+                    .certificatePinner(pinner)
                     .addInterceptor(new StethoInterceptor()).build();
             Moshi moshi = new Moshi.Builder()
                 .add(Date.class, new Rfc3339DateJsonAdapter())

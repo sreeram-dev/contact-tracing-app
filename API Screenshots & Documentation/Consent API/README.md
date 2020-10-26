@@ -1,6 +1,8 @@
 Consent API
 ---------------------------
 
+PostMan Collection: https://www.getpostman.com/collections/884a2beb85efb8ae1797
+
 *Register Patient* - To register a patient with health authorities after accepting the terms and conditions just like in CovidNotify.
 *Admission Set Diagnosis Status* - Set Diagnosis Status - We will set a user as positive or negative based on this. This is a proxy to actually testing done by the health authorities.
 
