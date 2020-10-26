@@ -49,4 +49,12 @@ public class ErrorResponse {
         sb.append("traceback: " + traceback + "\n");
         return sb.toString();
     }
+
+    /**
+     * get Error description
+     * @return
+     */
+    public String getDescription() {
+        return this.description;
+    }
 }

@@ -24,6 +24,10 @@ public class PatientStatusResponse {
         return sb.toString();
     }
 
+    public PatientDTO getPatient() {
+        return this.patient;
+    }
+
     public Boolean isPositive() {
         return this.patient.getIsPositive();
     }
