@@ -51,8 +51,6 @@
             android:layout_height="1dp"
             android:background="?android:attr/listDivider"/>
 
-
-
         <View
             android:id="@+id/divider3"
             android:layout_width="match_parent"
@@ -75,12 +73,6 @@
         android:text="Terms and Conditions"
         android:textAlignment="center" />
 
-
-
-
-
-
-
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button2"
         android:layout_width="match_parent"
@@ -90,7 +82,7 @@
         android:layout_marginRight="30dp"
         android:layout_marginLeft="30dp"
         android:layout_marginBottom="20dp"
-        android:text="Continue"
+        android:text="Accept and Continue"
         android:onClick="clickBarcode"
         android:textColor="#FFFFFF"
         android:textSize="16sp"

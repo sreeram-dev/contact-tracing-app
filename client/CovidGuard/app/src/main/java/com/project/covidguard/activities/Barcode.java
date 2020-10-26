@@ -1,23 +1,17 @@
 package com.project.covidguard.activities;
 
 import android.os.Bundle;
-
-
-import com.project.covidguard.ExposureKeyService;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.view.MenuItem;
-import android.view.View;
 import android.graphics.Bitmap;
-import android.os.Bundle;
-import android.view.Gravity;
+
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import com.google.android.material.imageview.ShapeableImageView;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -27,6 +21,7 @@ import com.google.zxing.common.BitMatrix;
 import java.util.EnumMap;
 import java.util.Map;
 import com.project.covidguard.R;
+import com.project.covidguard.StorageUtils;
 
 public class Barcode extends AppCompatActivity {
 
@@ -42,36 +37,17 @@ public class Barcode extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-LinearLayout l = new LinearLayout(this);
-        l.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-        l.setOrientation(LinearLayout.VERTICAL);
-
-        setContentView(l);
-
-        // barcode data
-        String barcode_data ;
-
-        // barcode image
-        Bitmap bitmap = null;
-        ImageView iv = new ImageView(this);
-
         try {
-
-            bitmap = encodeAsBitmap(ExposureKeyService.secureRandom.toString(), BarcodeFormat.CODE_128, 1000, 500);
+            ShapeableImageView iv = findViewById(R.id.uuid_qr_code);
+            String uuid = StorageUtils.getUUIDFromSharedPreferences(getApplicationContext());
+            Bitmap bitmap = encodeAsBitmap(uuid, BarcodeFormat.QR_CODE, 1000, 500);
             iv.setImageBitmap(bitmap);
 
         } catch (WriterException e) {
             e.printStackTrace();
         }
-
-        l.addView(iv);
-
-        //barcode text
-        TextView tv = new TextView(this);
-
-        l.addView(tv);
-
     }
+
     private static final int WHITE = 0xFFFFFFFF;
     private static final int BLACK = 0xFF000000;
 

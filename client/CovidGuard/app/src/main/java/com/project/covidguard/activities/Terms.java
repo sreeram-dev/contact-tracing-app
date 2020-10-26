@@ -24,8 +24,6 @@ public class Terms extends AppCompatActivity {
         setSupportActionBar(mTopToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-
     }
     public void clickBarcode(View view) {
         Intent localIntent = new Intent(Terms.this, Barcode.class);

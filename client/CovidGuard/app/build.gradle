@@ -45,8 +45,10 @@ dependencies {
     def room_version = "2.2.5"
     def retrofit_version = "2.9.0"
     def work_version = "2.4.0"
-    implementation 'com.google.zxing:core:3.2.1'
-    implementation 'com.journeyapps:zxing-android-embedded:3.2.0@aar'
+
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.journeyapps:zxing-android-embedded:3.3.0'
+
     // google dependencies
     api 'com.google.android.material:material:1.2.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
