@@ -46,11 +46,12 @@ class RegistrationView(MethodView):
 
         uuid = request.form.get('uuid')
 
-        self.patient_service.register_uuid(uuid)
+        profile = self.patient_service.register_uuid(uuid)
 
         data = {
             'success': True,
-            'message': 'Patient Successfully registered'
+            'message': 'Patient Successfully registered',
+            'profile': profile.to_dict()
         }
 
         return jsonify(data), 200
@@ -112,9 +113,12 @@ class DiagnosisView(MethodView):
             }
             return jsonify(data), 400
 
+        profile = self.patient_service.find_by_uuid(uuid)
+
         data = {
             'success': True,
-            'message': 'Patient has been successfully diagnosed'
+            'message': 'Patient has been successfully diagnosed',
+            'profile': profile.to_dict()
         }
 
         return jsonify(data), 200

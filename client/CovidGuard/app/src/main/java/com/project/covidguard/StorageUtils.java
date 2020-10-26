@@ -56,4 +56,39 @@ public class StorageUtils {
         return sharedPref;
     }
 
+    public static Boolean isPatientRegistered(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(
+            "user_details", Context.MODE_PRIVATE);
+
+        if (!sharedPreferences.contains("patient_profile_id")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void storePatientDetails(Context context, String id) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(
+            "user_details", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("patient_profile_id", id);
+        editor.commit();
+    }
+
+    public static String getUUIDFromSharedPreferences(Context context) {
+        SharedPreferences sharedPref = null;
+        try {
+            sharedPref = getEncryptedSharedPref(context, context.getString(R.string.preference_file_key));
+        } catch (Exception e) {
+            Log.d("StoregeUtils", "Encrypted shared preferences is not accesible");
+        }
+
+        if (sharedPref == null) {
+            Log.d("StorageUtils", "Token could not be checked as the shared pref is not accessible");
+            return "";
+        }
+
+        return sharedPref.getString("uuid", "");
+    }
 }

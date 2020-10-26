@@ -3,17 +3,32 @@ package com.project.covidguard;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.work.BackoffPolicy;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import com.facebook.stetho.Stetho;
+import com.project.covidguard.activities.DiagnoseActivity;
 import com.project.covidguard.data.AppDatabase;
+import com.project.covidguard.tasks.MatchMakerTask;
 
 import org.conscrypt.Conscrypt;
 
 import java.security.Security;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 public class App extends Application {
@@ -50,7 +65,10 @@ public class App extends Application {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             Security.insertProviderAt(Conscrypt.newProvider(), 1);
         }
+
         createNotificationChannel();
+
+
     }
 
     private void createNotificationChannel() {
@@ -94,4 +112,5 @@ public class App extends Application {
     public WorkManager getWorkManager() {
         return mWorkManager;
     }
+
 }

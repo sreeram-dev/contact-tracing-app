@@ -1,8 +1,8 @@
 package com.project.covidguard.web.services;
 
 import com.project.covidguard.web.requests.UploadTEKRequest;
-import com.project.covidguard.web.responses.DownloadTEKResponse;
-import com.project.covidguard.web.responses.UploadDiagnosisKeyResponse;
+import com.project.covidguard.web.responses.ens.DownloadTEKResponse;
+import com.project.covidguard.web.responses.ens.UploadDiagnosisKeyResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;

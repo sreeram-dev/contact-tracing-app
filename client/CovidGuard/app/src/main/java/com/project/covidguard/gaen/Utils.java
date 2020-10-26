@@ -1,7 +1,6 @@
 package com.project.covidguard.gaen;
 
 import android.util.Log;
-
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -93,7 +92,7 @@ public class Utils {
         byte[] RPIKey = getRPIKeyFromTEK(TEK);
         SecretKeySpec aesKey = new SecretKeySpec(RPIKey, 0, 16, "AES");
         Cipher cipher;
-        long ENIntervalNumberLimit = ENIN +10;
+        long ENIntervalNumberLimit = ENIN + 10;
 
         try {
             cipher = Cipher.getInstance("AES/ECB/NoPadding");
@@ -133,5 +132,4 @@ public class Utils {
         }
         return 0;
     }
-
 }

@@ -1,7 +1,6 @@
 
 package com.project.covidguard.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Base64;
+
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,26 +17,21 @@ import android.widget.Toast;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
-import com.project.covidguard.data.entities.DownloadTEK;
-import com.project.covidguard.data.entities.RPI;
-import com.project.covidguard.data.repositories.RPIRepository;
-import com.project.covidguard.data.repositories.TEKRepository;
-import com.project.covidguard.gaen.Utils;
-import com.project.covidguard.tasks.DownloadTEKTask;
+import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
-import com.project.covidguard.web.responses.RegisterUUIDResponse;
+import com.project.covidguard.web.responses.lis.RegisterPatientResponse;
+import com.project.covidguard.web.responses.verification.RegisterUUIDResponse;
+import com.project.covidguard.web.services.LISServerInterface;
+import com.project.covidguard.web.services.LISService;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
-import org.altbeacon.beacon.Identifier;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -45,15 +39,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.work.Data;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.lifecycle.Observer;
+import androidx.work.BackoffPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-
 public class DiagnoseActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DiagnoseActivity.class.getName();
+    public static final Integer POSITIVE_CONTACT_NOTIFICATION_ID = 2;
 
     Toolbar mTopToolbar;
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -68,6 +67,7 @@ public class DiagnoseActivity extends AppCompatActivity {
 
         if (isNetworkAvailable() && !StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG)) {
             generateAndStoreToken(uuid);
+            registerWithLISServer(uuid);
         } else {
             Toast.makeText(this, "Token present in system", Toast.LENGTH_LONG).show();
         }
@@ -149,54 +149,69 @@ public class DiagnoseActivity extends AppCompatActivity {
     }
 
     public void clickSubmitHandler(View view) {
-        Data data = new Data.Builder()
-            .putString("TAN", "1234-5678")
-            .build();
+        if (!isNetworkAvailable()) {
+            Toast.makeText(getApplicationContext(),  "Network is not available!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
-        wm.beginWith(RequestTANTask.getOneTimeRequest())
-            .then(UploadTEKTask.getOneTimeRequestWithoutParams())
+
+        OneTimeWorkRequest tanRequest = new OneTimeWorkRequest.Builder(RequestTANTask.class)
+            .addTag(RequestTANTask.TAG)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+            .build();
+
+        OneTimeWorkRequest uploadTEKRequest = new OneTimeWorkRequest.Builder(UploadTEKTask.class)
+            .addTag(UploadTEKTask.TAG)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+            .build();
+
+        wm.beginWith(tanRequest)
+            .then(uploadTEKRequest)
             .enqueue();
-        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
+
+        wm.getWorkInfoByIdLiveData(uploadTEKRequest.getId()).observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                    Toast.makeText(getApplicationContext(), "Submitted TEK Successfully", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
     }
 
     public void clickMatchMaker(View view) {
-        WorkManager.getInstance(getApplicationContext()).enqueue(DownloadTEKTask.getOneTimeRequest());
 
-        TEKRepository repo = new TEKRepository(getApplicationContext());
-        List<DownloadTEK> teks = repo.getAllDownloadedTEKsSync();
-        RPIRepository repoRPI = new RPIRepository(getApplicationContext());
-        List<RPI> rpis = repoRPI.getLatestRPIs();
-        ArrayList<byte[]> rpiArrayList = new ArrayList<>();
-        int result = 1000;
-
-        for (RPI rpi : rpis) {
-            byte[] rpiFromRoom = Identifier.parse(rpi.rpi, 16).toByteArray();
-            rpiArrayList.add(rpiFromRoom);
+        if (!isNetworkAvailable()) {
+            Toast.makeText(getApplicationContext(),  "Network is not available!", Toast.LENGTH_LONG).show();
+            return;
         }
 
-        for (DownloadTEK tek : teks) {
-            //initialise GAEN variables based on fetched TEK and ENIN
+        WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
+        OneTimeWorkRequest matchRequest = new OneTimeWorkRequest.Builder(MatchMakerTask.class)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 2, TimeUnit.MINUTES)
+            .build();
 
-            //initialise GAEN variables based on fetched TEK and ENIN
+        wm.enqueue(matchRequest);
 
-            byte[] TEKByteArray = Base64.decode(tek.getTek(), Base64.DEFAULT);
-            long ENIntervalNumber = tek.getEnIntervalNumber();
-            result = Utils.generateAllRPIsForTEKAndEnIntervalNumber(TEKByteArray, ENIntervalNumber, rpiArrayList);
-            if (result == 1) {
-                Toast.makeText(this, "You have been in contact with a COVID positive case. Seek medical attention immediately!", Toast.LENGTH_LONG).show();
-                break;
-            }
-
-        }
-        Log.d("RESULT FROM UTILS", String.valueOf(result));
-        if (result == 0 || result == 1000) {
-            Toast.makeText(this, "You are safe!", Toast.LENGTH_LONG).show();
-        } else if (result == 999) {
-            Toast.makeText(this, "System Error", Toast.LENGTH_LONG).show();
-
-        }
-
+        wm.getWorkInfoByIdLiveData(matchRequest.getId())
+            .observe(this, new Observer<WorkInfo>() {
+                @Override
+                public void onChanged(WorkInfo workInfo) {
+                    if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                        Data data = workInfo.getOutputData();
+                        String msg = data.getString("message");
+                        Boolean isPositive = data.getBoolean("is_positive", false);
+                        if (!isPositive) {
+                            // if there is a positive contact notification, cancel it if launched by exposure key service
+                            NotificationManagerCompat manager =  NotificationManagerCompat.from(getApplicationContext());
+                            manager.cancel(DiagnoseActivity.POSITIVE_CONTACT_NOTIFICATION_ID);
+                        }
+                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
     }
 
     public void clickDeveloperMetricsHandler(View view) {
@@ -211,10 +226,39 @@ public class DiagnoseActivity extends AppCompatActivity {
 
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish() ;// close this activity and return to preview activity (if there is any)
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void registerWithLISServer(String uuid) {
+        LISServerInterface service = LISService.getService();
+
+        Call<RegisterPatientResponse> call = service.registerPatient(uuid);
+
+        call.enqueue(new Callback<RegisterPatientResponse>() {
+            @Override
+            public void onResponse(Call<RegisterPatientResponse> call, Response<RegisterPatientResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterPatientResponse res = response.body();
+                    StorageUtils.storePatientDetails(getApplicationContext(), res.getId());
+                    Log.d(LOG_TAG, "Patient Registered Successfully: res: " + res.toString());
+                } else {
+                    try {
+                        ErrorResponse err = ErrorResponse.buildFromSource(response.errorBody().source());
+                        Log.d(LOG_TAG, "Patient Registration Failed: err: " + err.toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterPatientResponse> call, Throwable t) {
+                Log.d(LOG_TAG, "Request to LIS Server failed");
+            }
+        });
     }
 }

@@ -75,16 +75,29 @@ public class RPIRepository {
         return null;
     }
 
-
     /**
      * Store the RPI and received timestamp
      */
-    public void storeReceivedRPI(String rpiString, Long timestamp) {
-        RPI rpi = new RPI(rpiString, "",  timestamp);
+    public void storeReceivedRPI(String rpiString, Double rssi, Double distance, Integer txPower, Long timestamp) {
+
         executors.diskIO().submit(new Runnable() {
+
             @Override
             public void run() {
-                mRPIDao.insert(rpi);
+                RPI rpi = new RPI(rpiString, "",  timestamp);
+                RPI dupRPI = mRPIDao.getRPIByID(rpiString);
+                if (dupRPI != null) {
+                    // Update the running average of rssi as the rpi is received multiple times
+                    dupRPI.setRssi(rssi);
+                    dupRPI.setTxPower(txPower);
+                    dupRPI.setDistance(distance);
+                    mRPIDao.update(dupRPI);
+                } else {
+                    rpi.setRssi(rssi);
+                    rpi.setTxPower(txPower);
+                    rpi.setDistance(distance);
+                    mRPIDao.insert(rpi);
+                }
             }
         });
     }

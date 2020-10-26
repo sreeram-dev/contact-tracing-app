@@ -8,6 +8,7 @@ import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
 
 import java.util.Date;
 
+import okhttp3.CertificatePinner;
 import okhttp3.OkHttpClient;
 
 import retrofit2.Retrofit;
@@ -19,7 +20,13 @@ public class VerificationService {
 
     public static VerificationEndpointInterface getService() {
         if (retrofit == null) {
+            CertificatePinner pinner = new CertificatePinner.Builder()
+                .add("*.appspot.com", "sha256/xkLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
+                .add("covidgaurd-285412.ts.r.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
+                .build();
+
             OkHttpClient client = new OkHttpClient.Builder()
+                    .certificatePinner(pinner)
                     .addNetworkInterceptor(new StethoInterceptor()).build();
             Moshi moshi = new Moshi.Builder()
                     .add(Date.class, new Rfc3339DateJsonAdapter())

@@ -1,10 +1,13 @@
 package com.project.covidguard;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -14,13 +17,27 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.lifecycle.LifecycleService;
+import androidx.lifecycle.LiveData;
+import androidx.work.BackoffPolicy;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.project.covidguard.activities.DiagnoseActivity;
 import com.project.covidguard.activities.SplashActivity;
 import com.project.covidguard.data.repositories.RPIRepository;
 import com.project.covidguard.gaen.BLEAdvertiser;
 import com.project.covidguard.gaen.GAENConstants;
 import com.project.covidguard.gaen.RPIGenerator;
 import com.project.covidguard.gaen.Utils;
+import com.project.covidguard.tasks.MatchMakerTask;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -37,6 +54,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Observer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.project.covidguard.App.CHANNEL_ID;
 import static com.project.covidguard.gaen.GAENConstants.BEACON_LAYOUT;
@@ -60,7 +80,7 @@ import static com.project.covidguard.gaen.GAENConstants.RPI_TIME_UNIT;
  * Close old Scheduled Server of Old TEK based RPI Generator
  * Start new Scheduled Server of New TEK based RPI Generator
  */
-public class ExposureKeyService extends Service implements BeaconConsumer {
+public class ExposureKeyService extends  LifecycleService  implements BeaconConsumer {
 
     private static final String LOG_TAG = ExposureKeyService.class.getCanonicalName();
 
@@ -93,35 +113,109 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        super.onStartCommand(intent, flags, startId);
+
         String input = "Do not force stop this";
 
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "ExposureService::ExposureNotificationService");
+            "ExposureService::ExposureNotificationService");
         wakeLock.acquire();
 
         List<Observer> rpiObservers = new ArrayList<>();
         rpiObservers.add(new BLEAdvertiser(getApplicationContext(), GAENConstants.ADVERTISING_INTERVAL));
 
         executors.scheduleIO().scheduleAtFixedRate(
-                new RPIGenerator(secureRandom, getApplicationContext(), rpiObservers), 0, RPI_INTERVAL, RPI_TIME_UNIT);
+            new RPIGenerator(secureRandom, getApplicationContext(), rpiObservers), 0, RPI_INTERVAL, RPI_TIME_UNIT);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            scheduleContactMatcher();
+        }
 
         Intent notificationIntent = new Intent(this, SplashActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Exposure Notification Service")
-                .setContentText(input)
-                .setSmallIcon(R.drawable.ic_android)
-                .setContentIntent(pendingIntent)
-                .build();
 
+        // If the token is registered with the verification server and location permission is granted,
+        // do not show let's get started.
+        if (StorageUtils.isTokenPresent(getApplicationContext(), LOG_TAG) &&
+            this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            notificationIntent = new Intent(this, DiagnoseActivity.class);
+        }
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+            0, notificationIntent, 0);
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Exposure Notification Service")
+            .setContentText(input)
+            .setSmallIcon(R.drawable.ic_android)
+            .setContentIntent(pendingIntent)
+            .build();
 
         startForeground(1, notification);
         return START_STICKY;
     }
 
+    /**
+     * Periodically schedule download and matching of keys
+     */
+    public void scheduleContactMatcher() {
+        WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
+        Constraints constraints = new Constraints.Builder()
+            .setRequiresBatteryNotLow(true)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build();
+
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(MatchMakerTask.class, 30, TimeUnit.MINUTES)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 5, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build();
+
+        wm.enqueueUniquePeriodicWork(MatchMakerTask.TAG, ExistingPeriodicWorkPolicy.REPLACE, request);
+        wm.getWorkInfosByTagLiveData(MatchMakerTask.TAG).observe(this, new androidx.lifecycle.Observer<List<WorkInfo>>() {
+            @Override
+            public void onChanged(List<WorkInfo> workInfos) {
+                for (WorkInfo workInfo : workInfos) {
+                    if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                        Data data1 = workInfo.getOutputData();
+                        Boolean isPositive = data1.getBoolean("is_positive", false);
+                        Log.d(LOG_TAG, "DatafromTask: " + data1.toString());
+                        if (isPositive) {
+                            Log.d(LOG_TAG, "Positive contact with infected patient");
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                raisePositiveNotification();
+                            }
+                        } else {
+                            // if there is a positive contact notification, cancel it if launched by exposure key service
+                            NotificationManagerCompat manager = NotificationManagerCompat.from(getApplicationContext());
+                            manager.cancel(DiagnoseActivity.POSITIVE_CONTACT_NOTIFICATION_ID);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void raisePositiveNotification() {
+        Intent intent = new Intent(getApplicationContext(), DiagnoseActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+        String title = "Possible COVID-19 Contact";
+        String message = "You have been contact with a COVID-19 Patient, Please get yourself checked";
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+            .setSmallIcon(R.drawable.app_logo)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            // Set the intent that will fire when the user taps the notification
+            .setContentIntent(pendingIntent)
+            .setLights(0xff0000ff, 2000, 500) // Blue color light flash for 2s on and 0.5 off
+            .setAutoCancel(true);
+
+        NotificationManagerCompat manager = NotificationManagerCompat.from(getApplicationContext());
+        manager.notify(DiagnoseActivity.POSITIVE_CONTACT_NOTIFICATION_ID, builder.build());
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -131,11 +225,12 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
             if (beacons.size() != 0) {
                 Beacon beacon = Utils.getLastElement(beacons);
                 ZonedDateTime time = LocalDateTime.now().atZone(ZoneId.systemDefault());
-                rpiRepo.storeReceivedRPI(beacon.getId1().toString(), time.toEpochSecond());
+                rpiRepo.storeReceivedRPI(beacon.getId1().toString(), beacon.getRunningAverageRssi(),
+                    beacon.getDistance(), beacon.getTxPower(), time.toEpochSecond());
                 Log.d(LOG_TAG, "didRangeBeaconsInRegion: "
                         + "\nUUID: " + beacon.getId1()
                         + "\nTIME: " + time.toString()
-                        + "\nRSSI: " + beacon.getRssi()
+                        + "\nRSSI: " + beacon.getRunningAverageRssi()
                         + "\nTX: " + beacon.getTxPower()
                         + "\nDISTANCE: " + beacon.getDistance());
             }
@@ -152,6 +247,7 @@ public class ExposureKeyService extends Service implements BeaconConsumer {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        super.onBind(intent);
         return null;
     }
 

@@ -2,3 +2,7 @@
 
 class ValidationError(Exception):
     pass
+
+
+class PatientNotFound(Exception):
+    pass
