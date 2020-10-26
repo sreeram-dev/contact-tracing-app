@@ -17,7 +17,6 @@ public interface LISServerInterface {
     @POST("register-patient")
     Call<RegisterPatientResponse> registerPatient(@Field("uuid") String uuid);
 
-    @FormUrlEncoded
     @GET("get-patient-status")
     Call<PatientStatusResponse> getPatientStatus(@Query("uuid") String uuid);
 }

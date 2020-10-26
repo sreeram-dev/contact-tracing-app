@@ -17,10 +17,12 @@ import android.widget.Toast;
 import com.project.covidguard.ExposureKeyService;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
+import com.project.covidguard.tasks.CheckPatientStatus;
 import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.lis.PatientStatusResponse;
 import com.project.covidguard.web.responses.lis.RegisterPatientResponse;
 import com.project.covidguard.web.responses.verification.RegisterUUIDResponse;
 import com.project.covidguard.web.services.LISServerInterface;
@@ -53,7 +55,6 @@ public class DiagnoseActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DiagnoseActivity.class.getName();
     public static final Integer POSITIVE_CONTACT_NOTIFICATION_ID = 2;
-
     Toolbar mTopToolbar;
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -148,13 +149,53 @@ public class DiagnoseActivity extends AppCompatActivity {
         return true;
     }
 
+    public void clickCheckInfected(View view) {
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(CheckPatientStatus.class)
+            .addTag(CheckPatientStatus.TAG)
+            .build();
+
+        WorkManager wm = WorkManager.getInstance(getApplicationContext());
+        wm.enqueue(request);
+
+        wm.getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                    Data outputData = workInfo.getOutputData();
+                    Boolean isPositive = outputData.getBoolean("isPositive", false);
+                    Boolean isRecovered = outputData.getBoolean("isRecovered", false);
+                    if (isPositive && !isRecovered) {
+                        Log.d(LOG_TAG, "You are covid-19 positive");
+                        Toast.makeText(getApplicationContext(), "You are covid-19 positive",
+                            Toast.LENGTH_LONG).show();
+                    }  else if (isRecovered) {
+                        Log.d(LOG_TAG, "You have recovered.");
+                        Toast.makeText(getApplicationContext(), "You have recovered.",
+                            Toast.LENGTH_LONG).show();
+                    } else {
+                        Log.d(LOG_TAG, "ou are not covid-19 positive.");
+                        Toast.makeText(getApplicationContext(), "You are not covid-19 positive.",
+                            Toast.LENGTH_LONG).show();
+                    }
+                } else if (workInfo.getState() == WorkInfo.State.FAILED) {
+                    Data outputData = workInfo.getOutputData();
+                    if (outputData != null) {
+                        String message = outputData.getString("message");
+
+                        Log.d(LOG_TAG, "Patient Status Check Failed: " + message);
+                        Toast.makeText(getApplicationContext(), message,
+                            Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        });
+    }
+
     public void clickSubmitHandler(View view) {
         if (!isNetworkAvailable()) {
             Toast.makeText(getApplicationContext(),  "Network is not available!", Toast.LENGTH_LONG).show();
             return;
         }
-
-        WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
         OneTimeWorkRequest tanRequest = new OneTimeWorkRequest.Builder(RequestTANTask.class)
             .addTag(RequestTANTask.TAG)
@@ -166,6 +207,7 @@ public class DiagnoseActivity extends AppCompatActivity {
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
             .build();
 
+        WorkManager wm = WorkManager.getInstance(getApplicationContext());
         wm.beginWith(tanRequest)
             .then(uploadTEKRequest)
             .enqueue();
@@ -175,6 +217,20 @@ public class DiagnoseActivity extends AppCompatActivity {
             public void onChanged(WorkInfo workInfo) {
                 if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
                     Toast.makeText(getApplicationContext(), "Submitted TEK Successfully", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        wm.getWorkInfoByIdLiveData(tanRequest.getId()).observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                if (workInfo.getState() == WorkInfo.State.FAILED) {
+                    Data data = workInfo.getOutputData();
+                    String message = data.getString("message");
+                    Log.d(LOG_TAG, "Tan request failed: " + message);
+                    if (data != null) {
+                        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                    }
                 }
             }
         });

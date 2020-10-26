@@ -22,6 +22,7 @@ import retrofit2.Response;
 public class CheckPatientStatus extends Worker {
 
     private static final String LOG_TAG = CheckPatientStatus.class.getCanonicalName();
+    public static final String TAG = "CheckPatientStatus";
 
     public CheckPatientStatus(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -32,7 +33,10 @@ public class CheckPatientStatus extends Worker {
     public Result doWork() {
         if (!StorageUtils.isPatientRegistered(getApplicationContext())) {
             Log.d(LOG_TAG, "Patient has not been registered");
-            return Result.failure();
+            Data data = new Data.Builder()
+                .putString("message", "Patient has not been registered")
+                .build();
+            return Result.failure(data);
         }
 
         String uuid = StorageUtils.getUUIDFromSharedPreferences(getApplicationContext());
@@ -51,11 +55,17 @@ public class CheckPatientStatus extends Worker {
             } else {
                 ErrorResponse err = ErrorResponse.buildFromSource(retrofitResponse.errorBody().source());
                 Log.d(LOG_TAG, "Error Response: " + err.toString());
-                return Result.failure();
+                Data data = new Data.Builder()
+                    .putString("message", err.toString())
+                    .build();
+                return Result.failure(data);
             }
         } catch (IOException e) {
             e.printStackTrace();
-            return Result.failure();
+            Data data = new Data.Builder()
+                .putString("message", "Request to LIS Server Failed")
+                .build();
+            return Result.failure(data);
         }
     }
 }

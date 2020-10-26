@@ -16,7 +16,10 @@ import androidx.work.WorkerParameters;
 import com.project.covidguard.R;
 import com.project.covidguard.StorageUtils;
 import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.lis.PatientStatusResponse;
 import com.project.covidguard.web.responses.verification.RequestTANResponse;
+import com.project.covidguard.web.services.LISServerInterface;
+import com.project.covidguard.web.services.LISService;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
@@ -64,6 +67,41 @@ public class RequestTANTask extends Worker {
             Log.e(LOG_TAG, "Failed to fetch TAN");
             Data data = new Data.Builder()
                 .putString("TAN", null)
+                .putString("message", "run attempts exceeded")
+                .build();
+            return Result.failure(data);
+        }
+
+        LISServerInterface service = LISService.getService();
+        String uuid = StorageUtils.getUUIDFromSharedPreferences(getApplicationContext());
+        Call<PatientStatusResponse> call = service.getPatientStatus(uuid);
+
+        try {
+            Response<PatientStatusResponse> retrofitResponse = call.execute();
+            if (retrofitResponse.isSuccessful()) {
+                PatientStatusResponse res = retrofitResponse.body();
+                if (!res.isPositive() || (res.isPositive() && res.isRecovered())) {
+                    Log.d(LOG_TAG, "You have not been tested covid-19 positive");
+                    Data data = new Data.Builder()
+                        .putString("TAN", null)
+                        .putString("message", "You have not been tested covid-19 Positive")
+                        .build();
+                    return Result.failure(data);
+                }
+            } else {
+                ErrorResponse err = ErrorResponse.buildFromSource(retrofitResponse.errorBody().source());
+                Log.d(LOG_TAG, "Error Response: " + err.toString());
+                Data data = new Data.Builder()
+                    .putString("message", err.getDescription())
+                    .putString("TAN", null)
+                    .build();
+                return Result.failure(data);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Data data = new Data.Builder()
+                .putString("TAN", null)
+                .putString("message", "Request to LIS Server Failed")
                 .build();
             return Result.failure(data);
         }
@@ -72,6 +110,7 @@ public class RequestTANTask extends Worker {
             Log.e(LOG_TAG, "App has not been registered, Cannot submit teks");
             Data data = new Data.Builder()
                 .putString("TAN", null)
+                .putString("message", "App has not been registered, Cannot submit teks")
                 .build();
             return Result.failure(data);
         }
@@ -82,6 +121,7 @@ public class RequestTANTask extends Worker {
             Log.e(LOG_TAG, "Token is empty, may not be stored");
             Data data = new Data.Builder()
                 .putString("TAN", null)
+                .putString("message", "Token not found in Storage")
                 .build();
             return Result.failure(data);
         }
@@ -96,6 +136,7 @@ public class RequestTANTask extends Worker {
             Log.e(LOG_TAG, "Failed to fetch TAN");
             Data data = new Data.Builder()
                 .putString("TAN", null)
+                .putString("message", "Failed to fetch TAN")
                 .build();
             return Result.failure(data);
         }

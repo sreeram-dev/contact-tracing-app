@@ -1,4 +1,3 @@
-
 package com.project.covidguard.activities;
 
 import android.Manifest;

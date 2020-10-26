@@ -94,7 +94,6 @@ public class UploadTEKTask extends Worker {
             ErrorResponse response = ErrorResponse.buildFromSource(retrofitResponse.errorBody().source());
             Log.e(LOG_TAG, "Upload Failed err: " + response.toString());
             throw new IOException("Upload failed err: " + response.toString());
-
         }
     }
 
