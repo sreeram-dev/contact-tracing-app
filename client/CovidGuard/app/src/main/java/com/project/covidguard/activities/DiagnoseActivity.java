@@ -20,7 +20,10 @@ import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
+import com.project.covidguard.web.responses.lis.PatientStatusResponse;
 import com.project.covidguard.web.responses.verification.RegisterUUIDResponse;
+import com.project.covidguard.web.services.LISServerInterface;
+import com.project.covidguard.web.services.LISService;
 import com.project.covidguard.web.services.VerificationEndpointInterface;
 import com.project.covidguard.web.services.VerificationService;
 
@@ -49,7 +52,7 @@ public class DiagnoseActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DiagnoseActivity.class.getName();
     public static final Integer POSITIVE_CONTACT_NOTIFICATION_ID = 2;
-
+    Boolean currentStatus=false;
     Toolbar mTopToolbar;
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -143,36 +146,46 @@ public class DiagnoseActivity extends AppCompatActivity {
         return true;
     }
 
+    public void clickCheckInfected(View view) {
+        isPositive();
+    }
+
     public void clickSubmitHandler(View view) {
         if (!isNetworkAvailable()) {
             Toast.makeText(getApplicationContext(),  "Network is not available!", Toast.LENGTH_LONG).show();
             return;
         }
 
-        WorkManager wm = WorkManager.getInstance(getApplicationContext());
+        if (currentStatus) {
+            System.out.println("==========================Working====================================");
+            WorkManager wm = WorkManager.getInstance(getApplicationContext());
 
-        OneTimeWorkRequest tanRequest = new OneTimeWorkRequest.Builder(RequestTANTask.class)
-            .addTag(RequestTANTask.TAG)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
-            .build();
+            OneTimeWorkRequest tanRequest = new OneTimeWorkRequest.Builder(RequestTANTask.class)
+                .addTag(RequestTANTask.TAG)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+                .build();
 
-        OneTimeWorkRequest uploadTEKRequest = new OneTimeWorkRequest.Builder(UploadTEKTask.class)
-            .addTag(UploadTEKTask.TAG)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
-            .build();
+            OneTimeWorkRequest uploadTEKRequest = new OneTimeWorkRequest.Builder(UploadTEKTask.class)
+                .addTag(UploadTEKTask.TAG)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+                .build();
 
-        wm.beginWith(tanRequest)
-            .then(uploadTEKRequest)
-            .enqueue();
+            wm.beginWith(tanRequest)
+                .then(uploadTEKRequest)
+                .enqueue();
 
-        wm.getWorkInfoByIdLiveData(uploadTEKRequest.getId()).observe(this, new Observer<WorkInfo>() {
-            @Override
-            public void onChanged(WorkInfo workInfo) {
-                if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                    Toast.makeText(getApplicationContext(), "Submitted TEK Successfully", Toast.LENGTH_LONG).show();
+            wm.getWorkInfoByIdLiveData(uploadTEKRequest.getId()).observe(this, new Observer<WorkInfo>() {
+                @Override
+                public void onChanged(WorkInfo workInfo) {
+                    if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                        Toast.makeText(getApplicationContext(), "Submitted TEK Successfully", Toast.LENGTH_LONG).show();
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Toast.makeText(getApplicationContext(), "You are not covid positive",
+                Toast.LENGTH_LONG).show();
+        }
     }
 
     public void clickMatchMaker(View view) {
@@ -208,6 +221,39 @@ public class DiagnoseActivity extends AppCompatActivity {
                 }
             });
     }
+
+
+
+    private void isPositive() {
+        LISServerInterface service = LISService.getService();
+        String uuid = StorageUtils.getUUIDFromSharedPreferences(getApplicationContext());
+//        String uuid="77b223d5a5104b4aa2f4928109a2cb36";
+        Call<PatientStatusResponse> call = service.getPatientStatus(uuid);
+
+        call.enqueue(new Callback<PatientStatusResponse>() {
+            @Override
+            public void onResponse(Call<PatientStatusResponse> call, Response<PatientStatusResponse> response) {
+                if (response.isSuccessful()) {
+                     PatientStatusResponse actualResponse = response.body();
+                    currentStatus = actualResponse.isPositive();
+                    System.out.println("===========================" + currentStatus + "==============================================");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PatientStatusResponse> call, Throwable t) {
+
+            }
+        });
+
+    }
+
+
+
+
+
+
+
 
 
     public void clickDeveloperMetricsHandler(View view) {
