@@ -94,7 +94,7 @@ public class DiagnoseActivity extends AppCompatActivity {
             editor.putString("token", token);
             editor.putString("uuid", uuid);
             editor.commit();
-            Log.d(LOG_TAG, "App has been registered with uuid: " + uuid);
+            Log.d(LOG_TAG, "App has been registered with uuid");
             Toast.makeText(this, "App Registration Succeeded", Toast.LENGTH_LONG).show();
         } catch (GeneralSecurityException | IOException exception) {
             exception.printStackTrace();
