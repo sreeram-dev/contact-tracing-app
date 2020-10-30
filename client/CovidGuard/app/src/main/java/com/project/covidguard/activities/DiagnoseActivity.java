@@ -56,6 +56,7 @@ public class DiagnoseActivity extends AppCompatActivity {
     private static final String LOG_TAG = DiagnoseActivity.class.getName();
     public static final Integer POSITIVE_CONTACT_NOTIFICATION_ID = 2;
     Toolbar mTopToolbar;
+
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onCreate(Bundle savedInstanceState) {

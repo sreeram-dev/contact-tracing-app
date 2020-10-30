@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.1"
+    buildToolsVersion '30.0.2'
 
     defaultConfig {
         applicationId "com.project.covidguard"
@@ -22,6 +22,7 @@ android {
                                       "$projectDir/schemas".toString()]
             }
         }
+        proguardFiles
     }
 
     buildTypes {
@@ -40,7 +41,7 @@ android {
 
 
 dependencies {
-    def nav_version = '2.3.0'
+    def nav_version = '2.3.1'
     def fragment_version = '1.2.5'
     def room_version = "2.2.5"
     def retrofit_version = "2.9.0"
@@ -56,28 +57,22 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment:$nav_version"
     implementation "androidx.navigation:navigation-ui:$nav_version"
 
-    //Reactive Extensions
-    //implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
-    //implementation 'io.reactivex.rxjava3:rxjava:3.0.6'
-
     //noinspection GradleCompatible
     implementation 'com.android.support:localbroadcastmanager:28.0.0'
 
     // 3rd party security and BLE libraries
     implementation group: 'at.favre.lib', name: 'hkdf', version: '1.1.0'
-    implementation 'org.altbeacon:android-beacon-library:2.17.1'
+    implementation 'org.altbeacon:android-beacon-library:2.17.1@aar'
     implementation 'org.conscrypt:conscrypt-android:2.5.0' // security provider for okhttp
     implementation 'androidx.security:security-crypto:1.0.0-alpha02' // for encrypted shared preferences
 
     // square networking and IO libraries
-    implementation 'com.squareup.okio:okio:2.8.0'
+    implementation 'com.squareup.okio:okio:2.9.0'
     implementation 'com.squareup.moshi:moshi:1.11.0'
-    // https://mvnrepository.com/artifact/com.squareup.moshi/moshi-adapters
     implementation group: 'com.squareup.moshi', name: 'moshi-adapters', version: '1.11.0'
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
     implementation "com.squareup.retrofit2:converter-moshi:$retrofit_version"
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
-    //implementation "com.squareup.retrofit2:adapter-rxjava3:$retrofit_version"
 
     // datastorage libraries
     // Use this to maintain backward compatibility
