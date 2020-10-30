@@ -46,6 +46,7 @@ dependencies {
     def room_version = "2.2.5"
     def retrofit_version = "2.9.0"
     def work_version = "2.4.0"
+    def sqlcipher_version = "4.4.0"
 
     implementation 'com.google.zxing:core:3.4.1'
 
@@ -75,10 +76,12 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
 
     // datastorage libraries
-    // Use this to maintain backward compatibility
+    // Use this to maintain backward compatibility of timestamps
     implementation 'org.threeten:threetenbp:1.4.4'
     implementation "androidx.room:room-runtime:$room_version"
+    implementation "net.zetetic:android-database-sqlcipher:$sqlcipher_version@aar"
     annotationProcessor "androidx.room:room-compiler:$room_version"
+
 
     // WorkManager for scheduling upload of TEKs
     implementation "androidx.work:work-runtime:$work_version"
