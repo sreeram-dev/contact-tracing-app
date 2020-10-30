@@ -1,6 +1,7 @@
 
 package com.project.covidguard.activities;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -39,6 +40,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.work.Data;
 import androidx.core.app.NotificationManagerCompat;
@@ -50,6 +52,8 @@ import androidx.work.WorkManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.project.covidguard.App.CHANNEL_ID;
 
 public class DiagnoseActivity extends AppCompatActivity {
 
@@ -264,6 +268,8 @@ public class DiagnoseActivity extends AppCompatActivity {
                             // if there is a positive contact notification, cancel it if launched by exposure key service
                             NotificationManagerCompat manager =  NotificationManagerCompat.from(getApplicationContext());
                             manager.cancel(DiagnoseActivity.POSITIVE_CONTACT_NOTIFICATION_ID);
+                        } else {
+                            raisePositiveNotification();
                         }
                         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
                     }
@@ -317,5 +323,27 @@ public class DiagnoseActivity extends AppCompatActivity {
                 Log.d(LOG_TAG, "Request to LIS Server failed");
             }
         });
+    }
+
+    private void raisePositiveNotification() {
+        Intent intent = new Intent(getApplicationContext(), DiagnoseActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+        String title = "Possible COVID-19 Contact";
+        String message = "You have been contact with a COVID-19 Patient, Please get yourself checked";
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+            .setSmallIcon(R.drawable.app_logo)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            // Set the intent that will fire when the user taps the notification
+            .setContentIntent(pendingIntent)
+            .setLights(0xff0000ff, 2000, 500) // Blue color light flash for 2s on and 0.5 off
+            .setAutoCancel(true);
+
+        NotificationManagerCompat manager = NotificationManagerCompat.from(getApplicationContext());
+        manager.notify(DiagnoseActivity.POSITIVE_CONTACT_NOTIFICATION_ID, builder.build());
     }
 }

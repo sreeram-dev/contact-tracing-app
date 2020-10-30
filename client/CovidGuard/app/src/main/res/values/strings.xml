@@ -11,7 +11,7 @@
     <string name="health_status_healthy">I am healthy and uninfected</string>
     <string name="health_status_infected">I am infected with COVID-19</string>
     <string name="health_status_disclaimer">Here you can anonymously update your health status. You will be notified if another user who has been near you has contracted COVID-19</string>
-    <string name="submit">SUBMIT</string>
+    <string name="submit_keys">Submit Diagnosis Keys</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="preference_file_key">com.project.covidguard.TOKEN_FILE</string>

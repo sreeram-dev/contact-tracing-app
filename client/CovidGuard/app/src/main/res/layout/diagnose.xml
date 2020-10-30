@@ -51,28 +51,6 @@
             android:layout_height="1dp"
             android:background="?android:attr/listDivider"/>
 
-        <RadioGroup
-            android:id="@+id/radioGroup"
-            android:layout_width="match_parent"
-            android:padding="5dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="15dp"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:layout_below="@+id/divider2">
-
-            <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/radioButton2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="@string/health_status_infected"
-                android:onClick="clickCheckInfected"
-                android:textSize="16sp" />
-        </RadioGroup>
-
         <View
             android:id="@+id/divider3"
             android:layout_width="match_parent"
@@ -149,7 +127,7 @@
         android:layout_marginRight="30dp"
         android:layout_marginLeft="30dp"
         android:layout_marginBottom="20dp"
-        android:text="@string/submit"
+        android:text="@string/submit_keys"
 
         android:onClick="clickSubmitHandler"
         android:textColor="#FFFFFF"
