@@ -40,6 +40,7 @@ public class Barcode extends AppCompatActivity {
         try {
             ShapeableImageView iv = findViewById(R.id.uuid_qr_code);
             String uuid = StorageUtils.getUUIDFromSharedPreferences(getApplicationContext());
+            uuid = "https://lis-server-289906.ts.r.appspot.com/set-diagnosis-status?uuid=" + uuid;
             Bitmap bitmap = encodeAsBitmap(uuid, BarcodeFormat.QR_CODE, 1000, 500);
             iv.setImageBitmap(bitmap);
 

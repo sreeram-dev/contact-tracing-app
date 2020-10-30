@@ -80,11 +80,18 @@ public class RequestTANTask extends Worker {
             Response<PatientStatusResponse> retrofitResponse = call.execute();
             if (retrofitResponse.isSuccessful()) {
                 PatientStatusResponse res = retrofitResponse.body();
-                if (!res.isPositive() || (res.isPositive() && res.isRecovered())) {
+                if (!res.isPositive()) {
                     Log.d(LOG_TAG, "You have not been tested covid-19 positive");
                     Data data = new Data.Builder()
                         .putString("TAN", null)
                         .putString("message", "You have not been tested covid-19 Positive")
+                        .build();
+                    return Result.failure(data);
+                } else if (res.isPositive() && res.isRecovered()) {
+                    Log.d(LOG_TAG, "You have not been tested covid-19 positive");
+                    Data data = new Data.Builder()
+                        .putString("TAN", null)
+                        .putString("message", "You have recovered from covid-19 patient")
                         .build();
                     return Result.failure(data);
                 }

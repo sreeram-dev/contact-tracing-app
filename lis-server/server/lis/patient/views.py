@@ -62,7 +62,7 @@ class DiagnosisView(MethodView):
     """
     patient_service = PatientService()
 
-    def _validate_request(self, request):
+    def _validate_post_request(self, request):
         """Validate the request
         """
         if not request.is_json:
@@ -87,7 +87,7 @@ class DiagnosisView(MethodView):
         """
 
         try:
-            self._validate_request(request)
+            self._validate_post_request(request)
         except (KeyError, ValueError) as e:
             data = {
                 'code': 400,
@@ -118,6 +118,60 @@ class DiagnosisView(MethodView):
         data = {
             'success': True,
             'message': 'Patient has been successfully diagnosed',
+            'profile': profile.to_dict()
+        }
+
+        return jsonify(data), 200
+
+    def _validate_get_request(self, request):
+        """
+        """
+        uuid = request.args.get('uuid', None)
+
+        if uuid is None:
+            raise KeyError('UUID param is required')
+
+        if not (len(uuid) >= 16 and len(uuid) <= 32):
+            raise ValueError(
+                'UUID Format is wrong - should be 16-32 characters')
+
+        profile = self.patient_service.find_by_uuid(uuid)
+        if not profile:
+            raise ValueError('UUID does not exist. uuid: ' + uuid)
+
+    def get(self):
+        """Set is-positive or is-recovered for the user
+        """
+
+        try:
+            self._validate_get_request(request)
+        except (KeyError, ValueError) as e:
+            data = {
+                'code': 400,
+                'name': 'LIS/PatientService',
+                'description': str(e)
+            }
+            return jsonify(data), 400
+
+        uuid = request.args.get('uuid')
+        profile = self.patient_service.find_by_uuid(uuid)
+
+        try:
+            self.patient_service.set_diagnosis_status(
+                uuid, False, True)
+        except ValidationError as e:
+            data = {
+                'code': 400,
+                'name': 'LIS/PatientService',
+                'description': str(e)
+            }
+            return jsonify(data), 400
+
+        profile = self.patient_service.find_by_uuid(uuid)
+
+        data = {
+            'success': True,
+            'message': 'Patient has been successfully marked positive',
             'profile': profile.to_dict()
         }
 

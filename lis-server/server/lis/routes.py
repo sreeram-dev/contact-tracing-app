@@ -17,7 +17,7 @@ app.add_url_rule('/register-patient',
                  methods=['POST'])
 app.add_url_rule('/set-diagnosis-status',
                  view_func=DiagnosisView.as_view('set-diagnosis-status'),
-                 methods=['POST'])
+                 methods=['POST', 'GET'])
 app.add_url_rule('/get-patient-status',
                  view_func=StatusView.as_view('status-view'),
                  methods=['GET'])
