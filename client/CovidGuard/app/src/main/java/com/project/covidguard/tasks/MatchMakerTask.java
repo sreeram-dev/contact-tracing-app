@@ -63,7 +63,9 @@ public class MatchMakerTask extends Worker {
         ArrayList<byte[]> rpiArrayList = new ArrayList<>();
         for (RPI rpi : rpis) {
             byte[] rpiFromRoom = Identifier.parse(rpi.getRpi(), 16).toByteArray();
-            rpiArrayList.add(rpiFromRoom);
+            if (rpi.getDistance() < 3.0 && rpi.getDistance() > -2) {
+                rpiArrayList.add(rpiFromRoom);
+            }
         }
 
         for (Pair<String, Long> tekPair : teks) {
