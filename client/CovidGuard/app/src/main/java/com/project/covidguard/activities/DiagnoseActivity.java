@@ -1,8 +1,10 @@
 
 package com.project.covidguard.activities;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -271,7 +273,20 @@ public class DiagnoseActivity extends AppCompatActivity {
                         } else {
                             raisePositiveNotification();
                         }
-                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                        AlertDialog.Builder alert = new AlertDialog.Builder(DiagnoseActivity.this);
+                        alert.setTitle("Alert");
+                        alert.setMessage(msg);
+                        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface alert, int which) {
+                                // TODO Auto-generated method stub
+                                //Do something
+                                alert.dismiss();
+                            }
+                        });
+                        alert.show();
                     }
                 }
             });
