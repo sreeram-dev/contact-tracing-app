@@ -223,7 +223,19 @@ public class DiagnoseActivity extends AppCompatActivity {
             @Override
             public void onChanged(WorkInfo workInfo) {
                 if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                    Toast.makeText(getApplicationContext(), "Submitted TEK Successfully", Toast.LENGTH_LONG).show();
+                    AlertDialog.Builder alert = new AlertDialog.Builder(DiagnoseActivity.this);
+                    alert.setTitle("Alert");
+                    alert.setMessage("Submitted TEK Successfully");
+                    alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface alert, int which) {
+                            // TODO Auto-generated method stub
+                            //Do something
+                            alert.dismiss();
+                        }
+                    });
+                    alert.show();
                 }
             }
         });
