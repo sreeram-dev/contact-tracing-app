@@ -15,8 +15,8 @@ public class ExposureNotificationService {
 
         if (retrofit == null) {
             CertificatePinner pinner = new CertificatePinner.Builder()
-                .add("*.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
-                .add("ens-server.ts.r.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
+                .add("*.appspot.com", "sha256/YZPgTZ+woNCCCIW3LH2CxQeLzB/1m42QcCTBSdgayjs=")
+                .add("ens-server.ts.r.appspot.com", "sha256/YZPgTZ+woNCCCIW3LH2CxQeLzB/1m42QcCTBSdgayjs=")
                 .build();
 
             OkHttpClient client = new OkHttpClient.Builder()

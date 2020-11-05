@@ -17,8 +17,8 @@ public class LISService {
     public static LISServerInterface getService() {
         if (retrofit == null) {
             CertificatePinner pinner = new CertificatePinner.Builder()
-                .add("*.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
-                .add("lis-server-289906.ts.r.appspot.com", "sha256/kLH97RYvr619x03I98F0AhFljGBJ0MWCeUKoIEJUJCQ=")
+                .add("*.appspot.com", "sha256/YZPgTZ+woNCCCIW3LH2CxQeLzB/1m42QcCTBSdgayjs=")
+                .add("lis-server-289906.ts.r.appspot.com", "sha256/YZPgTZ+woNCCCIW3LH2CxQeLzB/1m42QcCTBSdgayjs=")
                 .build();
 
             OkHttpClient client = new OkHttpClient.Builder()
