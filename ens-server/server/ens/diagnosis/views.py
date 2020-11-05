@@ -98,7 +98,7 @@ class DeleteTEKView(MethodView):
     diagnosis_service = DiagnosisKeyService()
     APPENGINE_CRON_HEADER = 'X-Appengine-Cron'
 
-    def post(self):
+    def get(self):
 
         cron_header = request.headers.get('X-Appengine-Cron')
         if cron_header is None or cron_header != 'true':

@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import logging.config
+import time
 import traceback
 
 from os.path import join
@@ -46,12 +47,19 @@ elif APP_MODE == 'prod':
 
 app.logger = logging.getLogger(app.config['LOGGER_NAME'])
 
-# log request and response info after extension's callbacks
+
+@app.before_request
+def before_request():
+    request_start_time = time.time()
+    g.request_time = lambda: "%.5fs" % (time.time() - request_start_time)
+
+
+#log request and response info after extension's callbacks
 @app.teardown_request
 def log_request_time(_exception):
     if APP_MODE == 'prod':
         app.logger.info(
-            f"{request.method} {request.path} - Sent {g.response.status_code} in {g.request_time:.5f}ms")
+            f"{request.method} {request.path} - Sent {g.response.status_code} + in " + str(int(g.request_time)) + "ms")
 
 
 @app.errorhandler(HTTPException)
@@ -99,5 +107,6 @@ class CustomJSONEncoder(JSONEncoder):
         else:
             return list(iterable)
         return JSONEncoder.default(self, obj)
+
 
 app.json_encoder = CustomJSONEncoder

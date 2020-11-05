@@ -50,16 +50,17 @@ app.logger = logging.getLogger(app.config['LOGGER_NAME'])
 
 @app.before_request
 def before_request():
-    g.request_start_time = time.time()
-    g.request_time = lambda: "%.5fs" % (time.time() - g.request_start_time)
+    request_start_time = time.time()
+    g.request_time = lambda: "%.5fs" % (time.time() - request_start_time)
 
 
-# log request and response info after extension's callbacks
+#log request and response info after extension's callbacks
 @app.teardown_request
 def log_request_time(_exception):
     if APP_MODE == 'prod':
         app.logger.info(
-            f"{request.method} {request.path} - Sent {g.response.status_code}" + " in {g.request_time:.5f}ms")
+            f"{request.method} {request.path} - Sent {g.response.status_code} + in " + str(int(g.request_time)) + "ms")
+
 
 
 @app.errorhandler(HTTPException)

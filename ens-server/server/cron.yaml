@@ -3,3 +3,6 @@ cron:
   url: /delete-old-teks
   schedule: every 5 hours
   timezone: Australia/Adelaide
+  retry_parameters:
+    min_backoff_seconds: 2.5
+    max_doublings: 5
