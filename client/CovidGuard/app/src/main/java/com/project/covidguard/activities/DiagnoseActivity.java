@@ -176,11 +176,11 @@ public class DiagnoseActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "You are covid-19 positive",
                             Toast.LENGTH_LONG).show();
                     }  else if (isRecovered) {
-                        Log.d(LOG_TAG, "You have recovered.");
-                        Toast.makeText(getApplicationContext(), "You have recovered.",
+                        Log.d(LOG_TAG, "You have recovered from covid-19.");
+                        Toast.makeText(getApplicationContext(), "You have recovered from covid-19.",
                             Toast.LENGTH_LONG).show();
                     } else {
-                        Log.d(LOG_TAG, "ou are not covid-19 positive.");
+                        Log.d(LOG_TAG, "You are not covid-19 positive.");
                         Toast.makeText(getApplicationContext(), "You are not covid-19 positive.",
                             Toast.LENGTH_LONG).show();
                     }
@@ -248,7 +248,19 @@ public class DiagnoseActivity extends AppCompatActivity {
                     String message = data.getString("message");
                     Log.d(LOG_TAG, "Tan request failed: " + message);
                     if (data != null) {
-                        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                        AlertDialog.Builder alert = new AlertDialog.Builder(DiagnoseActivity.this);
+                        alert.setTitle("Alert");
+                        alert.setMessage(message);
+                        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface alert, int which) {
+                                // TODO Auto-generated method stub
+                                //Do something
+                                alert.dismiss();
+                            }
+                        });
+                        alert.show();
                     }
                 }
             }
