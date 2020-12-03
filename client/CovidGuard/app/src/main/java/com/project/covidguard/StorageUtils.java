@@ -13,7 +13,6 @@ import java.security.GeneralSecurityException;
 
 public class StorageUtils {
 
-
     /**
      *
      * @param context The context in which the call is being made

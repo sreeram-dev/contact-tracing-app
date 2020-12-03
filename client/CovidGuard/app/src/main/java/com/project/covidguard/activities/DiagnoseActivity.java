@@ -25,7 +25,6 @@ import com.project.covidguard.tasks.MatchMakerTask;
 import com.project.covidguard.tasks.RequestTANTask;
 import com.project.covidguard.tasks.UploadTEKTask;
 import com.project.covidguard.web.responses.ErrorResponse;
-import com.project.covidguard.web.responses.lis.PatientStatusResponse;
 import com.project.covidguard.web.responses.lis.RegisterPatientResponse;
 import com.project.covidguard.web.responses.verification.RegisterUUIDResponse;
 import com.project.covidguard.web.services.LISServerInterface;

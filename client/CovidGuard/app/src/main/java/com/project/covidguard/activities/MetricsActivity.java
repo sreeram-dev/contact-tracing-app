@@ -66,6 +66,7 @@ public class MetricsActivity extends AppCompatActivity {
     public void clickENINMetric(View view) {
         TEKRepository repo = new TEKRepository(getApplicationContext());
         TEK currentENIN = repo.getLastTek();
+
         Toast.makeText(getApplicationContext(), "Current TEK was derived at the ENIntervalNumber: " + currentENIN.getEnIntervalNumber(), Toast.LENGTH_SHORT).show();
     }
 

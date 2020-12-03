@@ -7,10 +7,6 @@ import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.graphics.Bitmap;
 
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
