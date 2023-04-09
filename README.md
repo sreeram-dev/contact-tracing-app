@@ -1,7 +1,7 @@
 CovidGuard-F
 ----------------------------
 
-The GAEN-Compatible COVID-Tracing APP
+The GAEN-Compatible Contract-Tracing APP
 
 
 1. Server application code is in `server/`
